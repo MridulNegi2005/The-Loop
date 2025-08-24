@@ -9,8 +9,8 @@ const mockEvents = [
   { id: "evt_127", title: "24-Hour Hackathon", description: "Build, break, and innovate! Compete for amazing prizes and learn from industry mentors.", start_at: "2025-09-10T17:00:00Z", end_at: "2025-09-11T17:00:00Z", venue: "CSED Building", tags: ["productive", "tech", "hackathon"], lat: 30.3540, lng: 76.3655 },
 ];
 
-// --- MAP CUSTOMIZATION ---
-const mapStyles = [ { "elementType": "geometry", "stylers": [ { "color": "#ebe3cd" } ] }, { "elementType": "labels.text.fill", "stylers": [ { "color": "#523735" } ] }, { "elementType": "labels.text.stroke", "stylers": [ { "color": "#f5f1e6" } ] }, { "featureType": "administrative", "elementType": "geometry.stroke", "stylers": [ { "color": "#c9b2a6" } ] }, { "featureType": "administrative.land_parcel", "elementType": "geometry.stroke", "stylers": [ { "color": "#dcd2be" } ] }, { "featureType": "administrative.land_parcel", "elementType": "labels.text.fill", "stylers": [ { "color": "#ae9e90" } ] }, { "featureType": "landscape.natural", "elementType": "geometry", "stylers": [ { "color": "#dfd2ae" } ] }, { "featureType": "poi", "elementType": "geometry", "stylers": [ { "color": "#dfd2ae" } ] }, { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [ { "color": "#93817c" } ] }, { "featureType": "poi.park", "elementType": "geometry.fill", "stylers": [ { "color": "#a5b076" } ] }, { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [ { "color": "#447530" } ] }, { "featureType": "road", "elementType": "geometry", "stylers": [ { "color": "#f5f1e6" } ] }, { "featureType": "road.arterial", "elementType": "geometry", "stylers": [ { "color": "#fdfcf8" } ] }, { "featureType": "road.highway", "elementType": "geometry", "stylers": [ { "color": "#f8c967" } ] }, { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [ { "color": "#e9bc62" } ] }, { "featureType": "road.highway.controlled_access", "elementType": "geometry", "stylers": [ { "color": "#e98d58" } ] }, { "featureType": "road.highway.controlled_access", "elementType": "geometry.stroke", "stylers": [ { "color": "#db8555" } ] }, { "featureType": "road.local", "elementType": "labels.text.fill", "stylers": [ { "color": "#806b63" } ] }, { "featureType": "transit.line", "elementType": "geometry", "stylers": [ { "color": "#dfd2ae" } ] }, { "featureType": "transit.line", "elementType": "labels.text.fill", "stylers": [ { "color": "#8f7d77" } ] }, { "featureType": "transit.line", "elementType": "labels.text.stroke", "stylers": [ { "color": "#ebe3cd" } ] }, { "featureType": "transit.station", "elementType": "geometry", "stylers": [ { "color": "#dfd2ae" } ] }, { "featureType": "water", "elementType": "geometry.fill", "stylers": [ { "color": "#b9d3c2" } ] }, { "featureType": "water", "elementType": "labels.text.fill", "stylers": [ { "color": "#92998d" } ] } ];
+// --- MAP CUSTOMIZATION (New "Aubergine" Dark Theme) ---
+const mapStyles = [{"elementType":"geometry","stylers":[{"color":"#242f3e"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},{"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#d59563"}]},{"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#d59563"}]},{"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#263c3f"}]},{"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#6b9a76"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},{"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#212a37"}]},{"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#1f2835"}]},{"featureType":"road.highway","elementType":"labels.text.fill","stylers":[{"color":"#f3d19c"}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#2f3948"}]},{"featureType":"transit.station","elementType":"labels.text.fill","stylers":[{"color":"#d59563"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#515c6d"}]},{"featureType":"water","elementType":"labels.text.stroke","stylers":[{"color":"#17263c"}]}];
 const mapOptions = {
     styles: mapStyles,
     disableDefaultUI: true,
@@ -33,7 +33,46 @@ const mapOptions = {
 const formatDate = (dateString) => { const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' }; return new Date(dateString).toLocaleDateString(undefined, options); };
 const Tag = ({ text }) => { const tagColors = { productive: 'bg-blue-100 text-blue-800', chill: 'bg-green-100 text-green-800', wild: 'bg-purple-100 text-purple-800', tech: 'bg-indigo-100 text-indigo-800', music: 'bg-pink-100 text-pink-800', art: 'bg-yellow-100 text-yellow-800', fest: 'bg-red-100 text-red-800', dance: 'bg-teal-100 text-teal-800', 'late-night': 'bg-gray-200 text-gray-800', workshop: 'bg-orange-100 text-orange-800', hackathon: 'bg-cyan-100 text-cyan-800', default: 'bg-gray-100 text-gray-800' }; const colorClass = tagColors[text] || tagColors.default; return <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2 ${colorClass}`}>#{text}</span>; };
 
-// --- MAP VIEW COMPONENT (Updated with InfoWindow) ---
+// --- CALENDAR HELPER FUNCTIONS ---
+const formatICSDate = (date) => {
+    return date.toISOString().replace(/-|:|\.\d{3}/g, '');
+};
+
+const downloadICSFile = (event) => {
+    const startDate = new Date(event.start_at);
+    const endDate = new Date(event.end_at);
+    const now = new Date();
+
+    const escapeText = (text) => {
+        return text.replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+    }
+
+    const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'BEGIN:VEVENT',
+        `UID:${event.id}@theloop.com`,
+        `DTSTAMP:${formatICSDate(now)}`,
+        `DTSTART:${formatICSDate(startDate)}`,
+        `DTEND:${formatICSDate(endDate)}`,
+        `SUMMARY:${escapeText(event.title)}`,
+        `DESCRIPTION:${escapeText(event.description)}`,
+        `LOCATION:${escapeText(event.venue)}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${event.title.replace(/ /g, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+
+// --- MAP COMPONENTS ---
 const MapView = ({ events, setSelectedEvent }) => {
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -86,9 +125,9 @@ const MapView = ({ events, setSelectedEvent }) => {
           });
 
           const contentString = `
-            <div style="cursor: pointer; margin: 0; padding: 0;" onclick="window.selectEventFromMap('${event.id}')">
-              <h3 style="font-weight: bold; margin-bottom: 4px; font-size: 16px; margin-top: 0;">${event.title}</h3>
-              <p style="margin: 0; color: #555;">${event.venue}</p>
+            <div style="cursor: pointer; margin: 0; padding: 0; background-color: #333; color: #fff; border-radius: 5px; padding: 10px;" onclick="window.selectEventFromMap('${event.id}')">
+              <h3 style="font-weight: bold; margin-bottom: 4px; font-size: 16px; margin-top: 0; color: #f3d19c;">${event.title}</h3>
+              <p style="margin: 0; color: #ccc;">${event.venue}</p>
             </div>
           `;
           infoWindow.setContent(contentString);
@@ -112,6 +151,28 @@ const MapView = ({ events, setSelectedEvent }) => {
   );
 };
 
+const SingleEventMap = ({ event }) => {
+    const mapRef = useRef(null);
+
+    useEffect(() => {
+        if (mapRef.current && window.google) {
+            const map = new window.google.maps.Map(mapRef.current, {
+                center: { lat: event.lat, lng: event.lng },
+                zoom: 16,
+                ...mapOptions
+            });
+
+            new window.google.maps.Marker({
+                position: { lat: event.lat, lng: event.lng },
+                map: map,
+                title: event.title,
+            });
+        }
+    }, [event]);
+
+    return <div ref={mapRef} className="mt-4 w-full h-64 md:h-80 rounded-lg" />;
+};
+
 
 // --- PAGE & LAYOUT COMPONENTS ---
 const Header = ({ setPage, isLoggedIn, setSelectedEvent, setViewMode }) => {
@@ -131,9 +192,8 @@ const Header = ({ setPage, isLoggedIn, setSelectedEvent, setViewMode }) => {
     return (
         <header className="bg-white shadow-md sticky top-0 z-20">
             <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-800 hover:text-indigo-600">College Events</button>
+                <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-800 hover:text-indigo-600">The Loop</button>
                 
-                {/* Desktop Nav */}
                 <div className="hidden md:flex items-center space-x-3">
                     <button onClick={goHome} className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">All Events</button>
                     {isLoggedIn && <button onClick={() => alert('My Feed is coming soon!')} className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">My Feed</button>}
@@ -141,7 +201,6 @@ const Header = ({ setPage, isLoggedIn, setSelectedEvent, setViewMode }) => {
                     {isLoggedIn && <button onClick={() => alert('Logging out!')} className="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-300">Logout</button>}
                 </div>
 
-                {/* Mobile Menu Button */}
                 <div className="md:hidden">
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-600 hover:text-indigo-600 focus:outline-none">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -151,7 +210,6 @@ const Header = ({ setPage, isLoggedIn, setSelectedEvent, setViewMode }) => {
                 </div>
             </nav>
 
-            {/* Mobile Menu */}
             {isMenuOpen && (
                 <div className="md:hidden bg-white border-t border-gray-200">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -182,7 +240,7 @@ const EventList = ({ events, setSelectedEvent }) => (
         {events.map(event => <EventCard key={event.id} event={event} onSelect={() => setSelectedEvent(event)} />)}
     </div>
 );
-const EventDetailsPage = ({ event }) => {
+const EventDetailsPage = ({ event, mapScriptLoaded }) => {
     return (
         <main className="container mx-auto px-4 sm:px-6 py-12">
             <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -193,10 +251,17 @@ const EventDetailsPage = ({ event }) => {
                     <p className="mt-8 text-lg text-gray-700 leading-relaxed">{event.description}</p>
                     <div className="mt-8">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
                     <div className="mt-10 pt-8 border-t border-gray-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                        <div><h3 className="text-xl font-bold text-gray-800">Location</h3><p className="text-gray-600 mt-1">{event.venue}</p><div className="mt-4 w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center"><p className="text-gray-500">Map will be here soon!</p></div></div>
+                        <div className="w-full md:w-1/2">
+                            <h3 className="text-xl font-bold text-gray-800">Location</h3>
+                            <p className="text-gray-600 mt-1">{event.venue}</p>
+                            {mapScriptLoaded ? <SingleEventMap event={event} /> : <div className="mt-4 w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
+                        </div>
                         <div className="flex flex-col items-stretch gap-4 w-full md:w-auto">
                             <button className="group flex items-center justify-center gap-3 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg><span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out">Remind Me</span></button>
-                            <button onClick={() => alert('Connecting to Google Calendar...')} className="flex items-center justify-center gap-3 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
+                            <button onClick={() => downloadICSFile(event)} className="flex items-center justify-center gap-3 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                Add to Calendar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -217,12 +282,12 @@ export default function App() {
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
   const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
 
-  // IMPORTANT: Replace this with your actual Google Maps API key
-  const GOOGLE_MAPS_API_KEY = "AIzaSyB4ahphCSv4lWERGhBVL49c-8rhfe2W3uE"; 
+  // FIX: Using environment variable for the API key
+  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY; 
 
   // Effect to load the Google Maps script
   useEffect(() => {
-    if (viewMode === 'map' && !window.google) {
+    if ((viewMode === 'map' || selectedEvent) && !window.google) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
       script.async = true;
@@ -238,7 +303,7 @@ export default function App() {
     } else if (window.google) {
         setMapScriptLoaded(true);
     }
-  }, [viewMode, GOOGLE_MAPS_API_KEY]);
+  }, [viewMode, selectedEvent, GOOGLE_MAPS_API_KEY]);
 
   const EventsContainer = () => (
     <main className="container mx-auto px-4 sm:px-6 py-12">
@@ -259,7 +324,7 @@ export default function App() {
   );
 
   const renderPage = () => {
-    if (selectedEvent) return <EventDetailsPage event={selectedEvent} />;
+    if (selectedEvent) return <EventDetailsPage event={selectedEvent} mapScriptLoaded={mapScriptLoaded} />;
     if (page === 'login') return <LoginPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
     if (page === 'signup') return <SignupPage setPage={setPage} />;
     if (page === 'interest_selection') return <InterestSelectorPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
