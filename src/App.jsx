@@ -30,7 +30,7 @@ const getMapOptions = (theme) => ({
 
 // --- HELPER COMPONENTS ---
 const formatDate = (dateString) => { const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' }; return new Date(dateString).toLocaleDateString(undefined, options); };
-const Tag = ({ text }) => { const tagColors = { productive: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 dark:border dark:border-blue-700', chill: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700', wild: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 dark:border dark:border-purple-700', tech: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300 dark:border dark:border-violet-700', music: 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300 dark:border dark:border-pink-700', art: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border dark:border-yellow-700', fest: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 dark:border dark:border-red-700', dance: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 dark:border dark:border-teal-700', 'late-night': 'bg-gray-200 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300 dark:border dark:border-gray-600', workshop: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 dark:border dark:border-orange-700', hackathon: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border dark:border-cyan-700', default: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300 dark:border dark:border-gray-700' }; const colorClass = tagColors[text] || tagColors.default; return <span className={`inline-block rounded-full px-3 py-1 text-xs sm:text-sm font-semibold mr-2 mb-2 ${colorClass}`}>#{text}</span>; };
+const Tag = ({ text }) => { const tagColors = { productive: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 dark:border dark:border-blue-700', chill: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700', wild: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 dark:border dark:border-purple-700', tech: 'bg-indigo-100 text-indigo-800 dark:bg-violet-900/50 dark:text-violet-300 dark:border dark:border-violet-700', music: 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300 dark:border dark:border-pink-700', art: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border dark:border-yellow-700', fest: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 dark:border dark:border-red-700', dance: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 dark:border dark:border-teal-700', 'late-night': 'bg-gray-200 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300 dark:border dark:border-gray-600', workshop: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 dark:border dark:border-orange-700', hackathon: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border dark:border-cyan-700', default: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300 dark:border dark:border-gray-700' }; const colorClass = tagColors[text] || tagColors.default; return <span className={`inline-block rounded-full px-3 py-1 text-xs sm:text-sm font-semibold mr-2 mb-2 ${colorClass}`}>#{text}</span>; };
 
 // --- CALENDAR HELPER FUNCTIONS ---
 const formatICSDate = (date) => {
@@ -119,10 +119,11 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
         });
 
         marker.addListener('mouseover', () => {
-          const bgColor = theme === 'dark' ? 'rgba(30, 27, 47, 0.8)' : 'rgba(255, 255, 255, 0.8)';
-          const textColor = theme === 'dark' ? '#E5E7EB' : '#1F2937';
-          const subTextColor = theme === 'dark' ? '#9CA3AF' : '#4B5563';
-          const borderColor = theme === 'dark' ? 'rgba(109, 40, 217, 0.5)' : 'rgba(209, 213, 219, 0.5)';
+          const isDark = theme === 'dark';
+          const bgColor = isDark ? 'rgba(17, 17, 22, 0.8)' : '#ffffff';
+          const textColor = isDark ? '#E5E7EB' : '#1F2937';
+          const subTextColor = isDark ? '#9CA3AF' : '#4B5563';
+          const borderColor = isDark ? 'rgba(109, 40, 217, 0.5)' : 'rgba(229, 231, 235, 1)';
 
           const contentString = `
             <div 
@@ -130,14 +131,13 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
                 cursor: pointer; 
                 background-color: ${bgColor}; 
                 color: ${textColor}; 
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
+                ${isDark ? 'backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);' : ''}
                 border: 1px solid ${borderColor};
                 border-radius: 0.75rem; 
                 padding: 0.75rem 1rem; 
                 font-family: 'Inter', sans-serif;
                 width: 200px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+                box-shadow: ${isDark ? 'none' : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)'};
                 text-align: left;
               " 
               onclick="window.selectEventFromMap('${event.id}')"
@@ -215,7 +215,7 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
     }
 
     return (
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-gray-200/50 dark:border-purple-800/50 sticky top-0 z-20">
+        <header className="bg-white/80 dark:bg-[#111116]/80 backdrop-blur-sm border-b border-gray-200/50 dark:border-purple-800/50 sticky top-0 z-20">
             <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
                 <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors">The Loop</button>
                 
@@ -484,22 +484,19 @@ export default function App() {
 
   useEffect(() => {
     if ((viewMode === 'map' || selectedEvent) && !window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => setMapScriptLoaded(true);
-      document.head.appendChild(script);
-      
-      return () => {
-        if (document.head.contains(script)) {
-            document.head.removeChild(script);
-        }
-      };
-    } else if (window.google) {
-        setMapScriptLoaded(true);
+      if (!document.getElementById('google-maps-script')) {
+        const script = document.createElement('script');
+        script.id = 'google-maps-script';
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setMapScriptLoaded(true);
+        document.head.appendChild(script);
+      }
+    } else if (window.google && !mapScriptLoaded) {
+      setMapScriptLoaded(true);
     }
-  }, [viewMode, selectedEvent, GOOGLE_MAPS_API_KEY]);
+  }, [viewMode, selectedEvent, mapScriptLoaded]);
 
   const EventsContainer = () => (
     <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
@@ -535,7 +532,7 @@ export default function App() {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans transition-colors duration-300">
+    <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#111116] text-gray-100'}`}>
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -544,6 +541,7 @@ export default function App() {
         .page-transition {
           animation: fadeIn 0.4s ease-in-out;
         }
+        /* Google Maps Info Window Customization */
         .gm-style-iw-d {
           overflow: hidden !important;
         }
