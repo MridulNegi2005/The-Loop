@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// Mock Data with LATITUDE and LONGITUDE
+// Mock Data with LATITUDE and LONGITUDE (Now used as a fallback)
 const mockEvents = [
   { id: "evt_123", title: "Annual Tech Fest Kick-off", description: "Join us for the opening ceremony of the biggest tech fest on campus. Keynotes, food, and fun!", start_at: "2025-09-01T18:00:00Z", end_at: "2025-09-01T20:00:00Z", venue: "Main Auditorium", tags: ["productive", "tech", "fest"], lat: 30.3558, lng: 76.3625 },
   { id: "evt_124", title: "Acoustic Night at the Cafe", description: "Unwind with some live music from talented student artists. Grab a coffee and enjoy the vibes.", start_at: "2025-09-03T19:30:00Z", end_at: "2025-09-03T21:00:00Z", venue: "The Student Cafe", tags: ["chill", "music", "art"], lat: 30.3532, lng: 76.3651 },
-  { id: "evt_125", title: "Late Night Dance Party", description: "DJ Ron is back with the hottest tracks. Get ready to dance the night away!", start_at: "2025-09-05T22:00:00Z", end_at: "2025-09-06T02:00:00Z", venue: "Gymnasium Hall", tags: ["wild", "dance", "late-night"], lat: 30.3571, lng: 76.3689 },
-  { id: "evt_126", title: "Python Workshop", description: "Learn the basics of Pandas and Matplotlib in this hands-on workshop by the Coding Club.", start_at: "2025-09-06T14:00:00Z", end_at: "2025-09-06T16:00:00Z", venue: "Computer Lab 3", tags: ["productive", "workshop", "tech"], lat: 30.3545, lng: 76.3660 },
-  { id: "evt_127", title: "24-Hour Hackathon", description: "Build, break, and innovate! Compete for amazing prizes and learn from industry mentors.", start_at: "2025-09-10T17:00:00Z", end_at: "2025-09-11T17:00:00Z", venue: "CSED Building", tags: ["productive", "tech", "hackathon"], lat: 30.3540, lng: 76.3655 },
 ];
 
 // --- MAP CUSTOMIZATION (New "Aubergine" Dark Theme) ---
@@ -275,15 +272,39 @@ const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => { const allInterest
 
 // The main App component that brings everything together
 export default function App() {
-  const [events, setEvents] = useState(mockEvents);
+  const [events, setEvents] = useState([]); // Start with an empty array
   const [page, setPage] = useState('events');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
   const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // FIX: Using environment variable for the API key
-  const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY; 
+  const GOOGLE_MAPS_API_KEY = "AIzaSyB4ahphCSv4lWERGhBVL49c-8rhfe2W3uE"; 
+
+  // Effect to fetch event data from the live backend
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        // UPDATED: Pointing to the local FastAPI server
+        const response = await fetch('http://127.0.0.1:8000/events'); 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setEvents(data);
+      } catch (e) {
+        console.error("Failed to fetch events:", e);
+        setError("Could not connect to the server. Displaying sample data.");
+        setEvents(mockEvents); // Fallback to mock data on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []); // Empty dependency array means this runs only once on mount
 
   // Effect to load the Google Maps script
   useEffect(() => {
@@ -307,19 +328,25 @@ export default function App() {
 
   const EventsContainer = () => (
     <main className="container mx-auto px-4 sm:px-6 py-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Upcoming Events</h1>
-        <div className="flex items-center gap-1 p-1 bg-gray-200 rounded-lg">
-          <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow' : 'bg-transparent text-gray-600'}`}>List View</button>
-          <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'map' ? 'bg-white shadow' : 'bg-transparent text-gray-600'}`}>Map View</button>
-        </div>
-      </div>
-      {viewMode === 'list' && <EventList events={events} setSelectedEvent={setSelectedEvent} />}
-      {viewMode === 'map' && (
-        mapScriptLoaded 
-          ? <MapView events={events} setSelectedEvent={setSelectedEvent} /> 
-          : <div className="text-center py-10">Loading Map...</div>
-      )}
+        {isLoading && <div className="text-center py-10 text-gray-500">Loading events from the server...</div>}
+        {error && <div className="text-center mb-4 py-4 text-red-500 bg-red-100 rounded-lg">{error}</div>}
+        {!isLoading && (
+            <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Upcoming Events</h1>
+                    <div className="flex items-center gap-1 p-1 bg-gray-200 rounded-lg">
+                        <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow' : 'bg-transparent text-gray-600'}`}>List View</button>
+                        <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'map' ? 'bg-white shadow' : 'bg-transparent text-gray-600'}`}>Map View</button>
+                    </div>
+                </div>
+                {viewMode === 'list' && <EventList events={events} setSelectedEvent={setSelectedEvent} />}
+                {viewMode === 'map' && (
+                mapScriptLoaded 
+                    ? <MapView events={events} setSelectedEvent={setSelectedEvent} /> 
+                    : <div className="text-center py-10">Loading Map...</div>
+                )}
+            </>
+        )}
     </main>
   );
 
