@@ -254,7 +254,11 @@ const EventDetailsPage = ({ event, mapScriptLoaded }) => {
                             {mapScriptLoaded ? <SingleEventMap event={event} /> : <div className="mt-4 w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
                         </div>
                         <div className="flex flex-col items-stretch gap-4 w-full md:w-auto">
-                            <button className="group flex items-center justify-center gap-3 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg><span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out">Remind Me</span></button>
+                            {/* --- FIX: Made "Remind Me" text always visible --- */}
+                            <button className="flex items-center justify-center gap-3 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                <span>Remind Me</span>
+                            </button>
                             <button onClick={() => downloadICSFile(event)} className="flex items-center justify-center gap-3 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 Add to Calendar
@@ -287,7 +291,6 @@ export default function App() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        // UPDATED: Pointing to the local FastAPI server
         const response = await fetch('http://127.0.0.1:8000/events'); 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -304,7 +307,7 @@ export default function App() {
     };
 
     fetchEvents();
-  }, []); // Empty dependency array means this runs only once on mount
+  }, []);
 
   // Effect to load the Google Maps script
   useEffect(() => {
