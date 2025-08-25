@@ -3,17 +3,20 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from typing import List
+from datetime import datetime, timedelta
 
 # Database Imports
-from sqlalchemy import create_engine, Column, Integer, String, Float, Table, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
+from sqlalchemy.orm import sessionmaker, Session
 
 # CORS Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
-# Password Hashing
+# Password Hashing & JWT
 from passlib.context import CryptContext
+from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 # --- Database Setup ---
 SQLALCHEMY_DATABASE_URL = "sqlite:///./event_aggregator.db"
@@ -23,11 +26,24 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# --- Password Hashing Setup ---
+# --- Security & JWT Setup ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = "a_very_secret_key_that_should_be_in_an_env_file" # IMPORTANT: Change this and keep it secret
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 # --- SQLAlchemy Models (Database Tables) ---
 class User(Base):
@@ -48,8 +64,6 @@ class Event(Base):
     lng = Column(Float)
     tags = Column(String)
 
-
-# --- Create Database Tables ---
 Base.metadata.create_all(bind=engine)
 
 # --- Pydantic Schemas (API Data Shapes) ---
@@ -76,6 +90,10 @@ class UserSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 # --- Dependency for Database Session ---
 def get_db():
     db = SessionLocal()
@@ -84,10 +102,9 @@ def get_db():
     finally:
         db.close()
 
-# --- NEW: Database Seeding Function ---
+# --- Database Seeding Function ---
 def seed_database():
     db = SessionLocal()
-    # Check if the events table is empty
     if db.query(Event).count() == 0:
         print("Database is empty. Seeding with initial events...")
         initial_events = [
@@ -102,9 +119,7 @@ def seed_database():
         print("Database already contains data. Skipping seed.")
     db.close()
 
-# Run the seeding function on startup
 seed_database()
-
 
 # --- FastAPI App Initialization ---
 app = FastAPI()
@@ -145,3 +160,26 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+# NEW: User Login Endpoint
+@app.post("/users/login", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    Logs in a user and returns a JWT access token.
+    """
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# To run this server:
+# 1. Install new libraries:
+#    pip install "python-jose[cryptography]" python-multipart
+# 2. Save this file as main.py
+# 3. Run the server:
+#    uvicorn main:app --reload
