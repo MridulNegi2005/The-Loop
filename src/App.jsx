@@ -56,19 +56,26 @@ const downloadICSFile = (event) => {
 
 const SplineScene = () => {
   useEffect(() => {
+    const scriptId = 'spline-viewer-script';
+    if (document.getElementById(scriptId)) return; 
+
     const script = document.createElement('script');
+    script.id = scriptId;
     script.type = 'module';
     script.src = 'https://unpkg.com/@splinetool/viewer@1.0.25/build/spline-viewer.js';
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
+      const existingScript = document.getElementById(scriptId);
+      if (existingScript) {
+        // document.head.removeChild(existingScript);
+      }
     };
   }, []);
 
   return (
     <div className="absolute top-0 left-0 w-full h-full z-0">
-      <spline-viewer url="https://prod.spline.design/Cw-O625w-TgDSqPI/scene.splinecode"></spline-viewer>
+      <spline-viewer url="https://draft.spline.design/b6NpAoTs9BU03p64/scene.splinecode"></spline-viewer>
     </div>
   );
 };
@@ -82,6 +89,11 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
             const event = events.find(e => e.id.toString() === eventId.toString());
             if (event) setSelectedEvent(event);
         };
+        window.closeInfoWindow = () => {
+            if(infoWindowRef.current) {
+                infoWindowRef.current.close();
+            }
+        }
     }, [events, setSelectedEvent]);
 
     useEffect(() => {
@@ -116,11 +128,10 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
                     const upcomingEvents = locationEvents.filter(e => new Date(e.start_at) > now).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
                     const eventsToShow = upcomingEvents.slice(0, 3);
                     const hasMoreEvents = upcomingEvents.length > 3;
-                    const contentString = `<div style="background-color: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px;"><h2 style="font-weight: bold; font-size: 18px; color: #a78bfa; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #4338ca;">${firstEvent.venue}</h2>${eventsToShow.length > 0 ? eventsToShow.map(event => `<div style="cursor: pointer; padding: 8px 0; border-bottom: ${eventsToShow.length > 1 && eventsToShow.indexOf(event) !== eventsToShow.length - 1 ? '1px solid #312e81' : 'none'};" onclick="window.selectEventFromMap('${event.id}')"><h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #c7d2fe;">${event.title}</h3><p style="margin: 0; color: #a5b4fc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p></div>`).join('') : '<p style="margin: 0; color: #a5b4fc; font-size: 14px; text-align: center;">No upcoming events here.</p>'}${hasMoreEvents ? '<p style="text-align: center; margin-top: 8px; color: #818cf8; font-size: 12px;">...and more</p>' : ''}</div>`;
+                    const contentString = `<div style="background-color: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px; position: relative;"><button onclick="window.closeInfoWindow()" style="position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #a5b4fc; font-size: 18px; cursor: pointer;">&times;</button><h2 style="font-weight: bold; font-size: 18px; color: #a78bfa; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #4338ca;">${firstEvent.venue}</h2>${eventsToShow.length > 0 ? eventsToShow.map(event => `<div style="cursor: pointer; padding: 8px 0; border-bottom: ${eventsToShow.length > 1 && eventsToShow.indexOf(event) !== eventsToShow.length - 1 ? '1px solid #312e81' : 'none'};" onclick="window.selectEventFromMap('${event.id}')"><h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #c7d2fe;">${event.title}</h3><p style="margin: 0; color: #a5b4fc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p></div>`).join('') : '<p style="margin: 0; color: #a5b4fc; font-size: 14px; text-align: center;">No upcoming events here.</p>'}${hasMoreEvents ? '<p style="text-align: center; margin-top: 8px; color: #818cf8; font-size: 12px;">...and more</p>' : ''}</div>`;
                     infoWindow.setContent(contentString);
                     infoWindow.open({ anchor: marker, map });
                 });
-                marker.addListener('mouseout', () => { infoWindow.close(); });
             });
             map.addListener('click', () => infoWindow.close());
         }
