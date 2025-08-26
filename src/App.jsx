@@ -215,14 +215,14 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
     }
 
     return (
-        <header className="bg-white/80 dark:bg-[#111116]/80 backdrop-blur-sm border-b border-gray-200/50 dark:border-purple-800/50 sticky top-0 z-20">
+        <header className="bg-white/80 dark:bg-[#111116]/80 backdrop-blur-sm border-b border-gray-200/50 dark:border-yellow-800/50 sticky top-0 z-20">
             <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors">The Loop</button>
+                <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors">The Loop</button>
                 
                 <div className="hidden md:flex items-center space-x-2">
-                    <button onClick={goHome} className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md transition-colors">All Events</button>
-                    {isLoggedIn && <button onClick={() => alert('My Feed is coming soon!')} className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md transition-colors">My Feed</button>}
-                    {!isLoggedIn && <button onClick={() => navAction('login')} className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300">Login</button>}
+                    <button onClick={goHome} className="text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 px-3 py-2 rounded-md transition-colors">All Events</button>
+                    {isLoggedIn && <button onClick={() => alert('My Feed is coming soon!')} className="text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 px-3 py-2 rounded-md transition-colors">My Feed</button>}
+                    {!isLoggedIn && <button onClick={() => navAction('login')} className="bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors duration-300">Login</button>}
                     {isLoggedIn && <button onClick={handleLogout} className="bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-300">Logout</button>}
                     <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         {theme === 'dark' ? 
@@ -239,7 +239,7 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                         }
                     </button>
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 focus:outline-none">
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 focus:outline-none">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16m-7 6h7"} />
                         </svg>
@@ -248,11 +248,11 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
             </nav>
 
             {isMenuOpen && (
-                <div className="md:hidden bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-purple-800/50">
+                <div className="md:hidden bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-yellow-800/50">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        <button onClick={goHome} className="w-full text-left block text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">All Events</button>
-                        {isLoggedIn && <button onClick={() => alert('My Feed is coming soon!')} className="w-full text-left block text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">My Feed</button>}
-                        {!isLoggedIn && <button onClick={() => navAction('login')} className="w-full text-left block text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">Login</button>}
+                        <button onClick={goHome} className="w-full text-left block text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">All Events</button>
+                        {isLoggedIn && <button onClick={() => alert('My Feed is coming soon!')} className="w-full text-left block text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">My Feed</button>}
+                        {!isLoggedIn && <button onClick={() => navAction('login')} className="w-full text-left block text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">Login</button>}
                         {isLoggedIn && <button onClick={handleLogout} className="w-full text-left block text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-gray-800 px-3 py-2 rounded-md transition-colors">Logout</button>}
                     </div>
                 </div>
@@ -261,11 +261,11 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
     );
 };
 const EventCard = ({ event, onSelect }) => (
-    <button onClick={onSelect} className="w-full text-left block bg-white dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-purple-900/50 overflow-hidden shadow-sm hover:shadow-xl dark:hover:border-purple-500 hover:-translate-y-1 transition-all duration-300 ease-in-out">
+    <button onClick={onSelect} className="w-full text-left block bg-white dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-yellow-900/50 overflow-hidden shadow-sm hover:shadow-xl dark:hover:border-yellow-500 hover:-translate-y-1 transition-all duration-300 ease-in-out">
         <div className="p-6">
             <div className="flex justify-between items-start">
-                <div><div className="uppercase tracking-wide text-sm text-purple-500 dark:text-purple-400 font-bold">{event.venue}</div><h2 className="block mt-1 text-xl sm:text-2xl leading-tight font-bold text-gray-900 dark:text-white">{event.title}</h2></div>
-                <div className="flex-shrink-0 ml-4 w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center"><svg className="h-6 w-6 text-purple-500 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
+                <div><div className="uppercase tracking-wide text-sm text-yellow-500 dark:text-yellow-400 font-bold">{event.venue}</div><h2 className="block mt-1 text-xl sm:text-2xl leading-tight font-bold text-gray-900 dark:text-white">{event.title}</h2></div>
+                <div className="flex-shrink-0 ml-4 w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center"><svg className="h-6 w-6 text-yellow-500 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
             </div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">{event.description.substring(0, 100)}...</p>
             <div className="mt-6">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
@@ -280,14 +280,14 @@ const EventList = ({ events, setSelectedEvent }) => (
 const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
     return (
         <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
-            <div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-purple-900/50 rounded-xl overflow-hidden shadow-lg">
+            <div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-yellow-900/50 rounded-xl overflow-hidden shadow-lg">
                 <div className="p-6 sm:p-8 md:p-12">
-                    <div className="uppercase tracking-wide text-sm text-purple-500 dark:text-purple-400 font-bold">{event.venue}</div>
+                    <div className="uppercase tracking-wide text-sm text-yellow-500 dark:text-yellow-400 font-bold">{event.venue}</div>
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">{event.title}</h1>
                     <div className="mt-6"><p className="text-gray-600 dark:text-gray-400"><strong>Starts:</strong> {formatDate(event.start_at)}</p><p className="text-gray-500 dark:text-gray-400"><strong>Ends:</strong> {formatDate(event.end_at)}</p></div>
                     <p className="mt-8 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">{event.description}</p>
                     <div className="mt-8">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
-                    <div className="mt-10 pt-8 border-t border-gray-200 dark:border-purple-800/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="mt-10 pt-8 border-t border-gray-200 dark:border-yellow-800/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                         <div className="w-full md:w-1/2">
                             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Location</h3>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
@@ -353,25 +353,25 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
     return ( 
         <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
             <div className="w-full max-w-md">
-                <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-purple-900/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
+                <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-yellow-900/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
                     <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Welcome Back!</h2>
                     
                     {error && <p className="bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert">{error}</p>}
 
                     <div className="mb-4">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="email">Email</label>
-                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" id="email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
                     <div className="mb-6">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">Password</label>
-                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
+                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" id="password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
                     </div>
                     <div className="flex items-center justify-between">
-                        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-purple-400 dark:disabled:bg-purple-800" type="submit" disabled={isLoading}>
+                        <button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-yellow-400 dark:disabled:bg-yellow-800" type="submit" disabled={isLoading}>
                             {isLoading ? 'Signing In...' : 'Sign In'}
                         </button>
                     </div>
-                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Don't have an account? <button type="button" onClick={() => setPage('signup')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Sign Up</button></p>
+                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Don't have an account? <button type="button" onClick={() => setPage('signup')} className="font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300">Sign Up</button></p>
                 </form>
             </div>
         </div> 
@@ -413,36 +413,36 @@ const SignupPage = ({ setPage }) => {
     return ( 
         <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
             <div className="w-full max-w-md">
-                <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-purple-900/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
+                <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-yellow-900/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
                     <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Create Your Account</h2>
                     
                     {error && <p className="bg-red-100 border border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert">{error}</p>}
 
                     <div className="mb-4">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-email">Email</label>
-                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
                     </div>
                     <div className="mb-6">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-password">Password</label>
-                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
+                        <input className="bg-gray-50 border border-gray-300 text-gray-900 dark:bg-slate-700 dark:border-gray-600 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-yellow-500" id="signup-password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
                     </div>
                     <div className="flex items-center justify-between">
-                        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-purple-400 dark:disabled:bg-purple-800" type="submit" disabled={isLoading}>
+                        <button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-yellow-400 dark:disabled:bg-yellow-800" type="submit" disabled={isLoading}>
                             {isLoading ? 'Signing Up...' : 'Sign Up'}
                         </button>
                     </div>
-                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Already have an account? <button type="button" onClick={() => setPage('login')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Log In</button></p>
+                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Already have an account? <button type="button" onClick={() => setPage('login')} className="font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300">Log In</button></p>
                 </form>
             </div>
         </div> 
     ); 
 };
-const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => { const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon']; const [selectedInterests, setSelectedInterests] = useState([]); const toggleInterest = (interest) => { setSelectedInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]); }; const handleFinish = () => { console.log('User selected interests:', selectedInterests); alert('Your preferences have been saved!'); setIsLoggedIn(true); setPage('events'); }; return ( <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center"><div className="w-full max-w-2xl"><div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-purple-900/50 rounded-xl shadow-md p-8"><h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">What are you into?</h2><p className="text-center text-gray-500 dark:text-gray-400 mb-8">Select a few interests to help us personalize your event feed.</p><div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">{allInterests.map(interest => { const isSelected = selectedInterests.includes(interest); return (<button key={interest} onClick={() => toggleInterest(interest)} className={`capitalize font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full transition-all duration-200 ease-in-out transform hover:scale-105 ${isSelected ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'}`}>{interest}</button>); })}</div><div className="flex justify-center"><button onClick={handleFinish} disabled={selectedInterests.length < 1} className="w-full sm:w-1/2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-500 disabled:cursor-not-allowed">Finish</button></div></div></div></div> ); };
+const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => { const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon']; const [selectedInterests, setSelectedInterests] = useState([]); const toggleInterest = (interest) => { setSelectedInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]); }; const handleFinish = () => { console.log('User selected interests:', selectedInterests); alert('Your preferences have been saved!'); setIsLoggedIn(true); setPage('events'); }; return ( <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center"><div className="w-full max-w-2xl"><div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-yellow-900/50 rounded-xl shadow-md p-8"><h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">What are you into?</h2><p className="text-center text-gray-500 dark:text-gray-400 mb-8">Select a few interests to help us personalize your event feed.</p><div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">{allInterests.map(interest => { const isSelected = selectedInterests.includes(interest); return (<button key={interest} onClick={() => toggleInterest(interest)} className={`capitalize font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full transition-all duration-200 ease-in-out transform hover:scale-105 ${isSelected ? 'bg-yellow-600 text-white shadow-lg' : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'}`}>{interest}</button>); })}</div><div className="flex justify-center"><button onClick={handleFinish} disabled={selectedInterests.length < 1} className="w-full sm:w-1/2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-500 disabled:cursor-not-allowed">Finish</button></div></div></div></div> ); };
 
 // The main App component that brings everything together
 export default function App() {
   const [events, setEvents] = useState([]);
-  const [page, setPage] = useState('events');
+  const [page, setPage] = useState('landing');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState('list');
@@ -506,7 +506,7 @@ export default function App() {
             <>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Upcoming Events</h1>
-                    <div className="flex items-center gap-1 p-1 bg-gray-200 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-purple-800/50">
+                    <div className="flex items-center gap-1 p-1 bg-gray-200 dark:bg-slate-800 rounded-lg border border-gray-300 dark:border-yellow-800/50">
                         <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-gray-800 dark:text-white' : 'bg-transparent text-gray-500 dark:text-gray-400'}`}>List View</button>
                         <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 text-gray-800 dark:text-white' : 'bg-transparent text-gray-500 dark:text-gray-400'}`}>Map View</button>
                     </div>
@@ -522,7 +522,16 @@ export default function App() {
     </main>
   );
 
+  const LandingPage = () => (
+    <div className="flex flex-col items-center justify-center min-h-screen text-center px-4">
+        <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white tracking-tighter">Find Your Vibe</h1>
+        <p className="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl">Never miss out on what's happening on campus. The Loop is your one-stop shop for all college events.</p>
+        <button onClick={() => setPage('events')} className="mt-8 bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-yellow-700 transition-colors duration-300">Enter App</button>
+    </div>
+    );
+
   const renderPage = () => {
+    if (page === 'landing') return <LandingPage />;
     if (selectedEvent) return <EventDetailsPage event={selectedEvent} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
     if (page === 'login') return <LoginPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
     if (page === 'signup') return <SignupPage setPage={setPage} />;
@@ -555,7 +564,7 @@ export default function App() {
             display: none;
         }
       `}</style>
-      <Header setPage={setPage} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} setSelectedEvent={setSelectedEvent} setViewMode={setViewMode} theme={theme} setTheme={setTheme} />
+      {page !== 'landing' && <Header setPage={setPage} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} setSelectedEvent={setSelectedEvent} setViewMode={setViewMode} theme={theme} setTheme={setTheme} />}
       <div key={selectedEvent ? selectedEvent.id : page} className="page-transition">
         {renderPage()}
       </div>
