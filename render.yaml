@@ -1,5 +1,15 @@
 services:
-  - type: static
-    name: college-events
+  - type: web
+    name: the-loop-backend
+    env: python
+    buildCommand: ""
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    plan: free
+
+  - type: web
+    name: the-loop-frontend
+    env: node
     buildCommand: npm install && npm run build
+    startCommand: npx serve -s dist
     staticPublishPath: dist
+    plan: free

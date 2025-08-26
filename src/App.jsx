@@ -4,6 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 const mockEvents = [
   { id: "evt_123", title: "Annual Tech Fest Kick-off", description: "Join us for the opening ceremony of the biggest tech fest on campus. Keynotes, food, and fun!", start_at: "2025-09-01T18:00:00Z", end_at: "2025-09-01T20:00:00Z", venue: "Main Auditorium", tags: ["productive", "tech", "fest"], lat: 30.3558, lng: 76.3625 },
   { id: "evt_124", title: "Acoustic Night at the Cafe", description: "Unwind with some live music from talented student artists. Grab a coffee and enjoy the vibes.", start_at: "2025-09-03T19:30:00Z", end_at: "2025-09-03T21:00:00Z", venue: "The Student Cafe", tags: ["chill", "music", "art"], lat: 30.3532, lng: 76.3651 },
+  { id: "evt_125", title: "Late Night Dance Party", description: "DJ Ron is back with the hottest tracks. Get ready to dance the night away!", start_at: "2025-09-05T22:00:00Z", end_at: "2025-09-06T02:00:00Z", venue: "Gymnasium Hall", tags: ["wild", "dance", "late-night"], lat: 30.3571, lng: 76.3689 },
+  { id: "evt_126", title: "Python Workshop", description: "Learn the basics of Pandas and Matplotlib in this hands-on workshop by the Coding Club.", start_at: "2025-09-06T14:00:00Z", end_at: "2025-09-06T16:00:00Z", venue: "Computer Lab 3", tags: ["productive", "workshop", "tech"], lat: 30.3545, lng: 76.3660 },
+  { id: "evt_127", title: "24-Hour Hackathon", description: "Build, break, and innovate! Compete for amazing prizes and learn from industry mentors.", start_at: "2025-09-10T17:00:00Z", end_at: "2025-09-11T17:00:00Z", venue: "CSED Building", tags: ["productive", "tech", "hackathon"], lat: 30.3540, lng: 76.3655 },
+  { id: "evt_128", title: "Intro to UI/UX Design", description: "Learn the fundamentals of user-centric design in this interactive session.", start_at: "2025-09-10T11:00:00Z", end_at: "2025-09-10T13:00:00Z", venue: "CSED Building", tags: ["productive", "art", "workshop"], lat: 30.3540, lng: 76.3655 },
+  { id: "evt_129", title: "Guest Lecture: AI Ethics", description: "A talk by a leading researcher on the ethical implications of artificial intelligence.", start_at: "2025-09-10T15:00:00Z", end_at: "2025-09-10T16:00:00Z", venue: "CSED Building", tags: ["productive", "tech"], lat: 30.3540, lng: 76.3655 },
+  { id: "evt_130", title: "Movie Screening: The Matrix", description: "Join the film club for a screening of the classic sci-fi movie.", start_at: "2025-09-12T20:00:00Z", end_at: "2025-09-12T22:30:00Z", venue: "Main Auditorium", tags: ["chill", "movie"], lat: 30.3558, lng: 76.3625 },
 ];
 
 // --- MAP CUSTOMIZATION ---
@@ -14,14 +20,14 @@ const getMapOptions = (theme) => ({
     styles: theme === 'dark' ? darkMapStyles : lightMapStyles,
     disableDefaultUI: true,
     zoomControl: true,
-    minZoom: 14,
+    minZoom: 6, // Doubled zoom out (was 12)
     maxZoom: 18,
     restriction: {
         latLngBounds: {
-            north: 30.360,
-            south: 30.350,
-            west: 76.359,
-            east: 76.372,
+            north: 30.38, // Expanded bounds slightly
+            south: 30.33,
+            west: 76.34,
+            east: 76.39,
         },
         strictBounds: false,
     },
@@ -29,7 +35,8 @@ const getMapOptions = (theme) => ({
 
 
 // --- HELPER COMPONENTS ---
-const formatDate = (dateString) => { const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' }; return new Date(dateString).toLocaleDateString(undefined, options); };
+const formatDate = (dateString, options = { month: 'short', day: 'numeric' }) => { return new Date(dateString).toLocaleDateString(undefined, options); };
+const formatTime = (dateString) => { const options = { hour: 'numeric', minute: 'numeric', hour12: true }; return new Date(dateString).toLocaleTimeString(undefined, options); };
 const Tag = ({ text }) => { const tagColors = { productive: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 dark:border dark:border-blue-700', chill: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700', wild: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 dark:border dark:border-purple-700', tech: 'bg-indigo-100 text-indigo-800 dark:bg-violet-900/50 dark:text-violet-300 dark:border dark:border-violet-700', music: 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300 dark:border dark:border-pink-700', art: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border dark:border-yellow-700', fest: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 dark:border dark:border-red-700', dance: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 dark:border dark:border-teal-700', 'late-night': 'bg-gray-200 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300 dark:border dark:border-gray-600', workshop: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 dark:border dark:border-orange-700', hackathon: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border dark:border-cyan-700', default: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300 dark:border dark:border-gray-700' }; const colorClass = tagColors[text] || tagColors.default; return <span className={`inline-block rounded-full px-3 py-1 text-xs sm:text-sm font-semibold mr-2 mb-2 ${colorClass}`}>#{text}</span>; };
 
 // --- CALENDAR HELPER FUNCTIONS ---
@@ -74,7 +81,6 @@ const downloadICSFile = (event) => {
 // --- MAP COMPONENTS ---
 const MapView = ({ events, setSelectedEvent, theme }) => {
   const mapRef = useRef(null);
-  const markersRef = useRef([]);
   const infoWindowRef = useRef(null); 
 
   useEffect(() => {
@@ -93,71 +99,68 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
       });
 
       if (!infoWindowRef.current) {
+        const infoWindowContent = document.createElement('div');
         infoWindowRef.current = new window.google.maps.InfoWindow({
-          pixelOffset: new window.google.maps.Size(0, -35),
-          disableAutoPan: true,
+            content: infoWindowContent,
+        });
+        infoWindowRef.current.addListener('domready', () => {
+            const iwOuter = document.querySelector('.gm-style-iw-a');
+            if(iwOuter) {
+                const iwBackground = iwOuter.parentElement;
+                iwBackground.style.setProperty('background', 'transparent', 'important');
+                iwBackground.style.setProperty('box-shadow', 'none', 'important');
+                if (iwOuter.previousElementSibling) {
+                    iwOuter.previousElementSibling.remove();
+                }
+            }
         });
       }
       const infoWindow = infoWindowRef.current;
 
-      markersRef.current.forEach(marker => marker.setMap(null));
-      markersRef.current = [];
+      const eventsByLocation = events.reduce((acc, event) => {
+        const key = `${event.lat},${event.lng}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(event);
+        return acc;
+      }, {});
 
-      const getPinColor = (tags) => {
-        const primaryTag = tags[0];
-        const colors = { productive: 'blue', chill: 'green', wild: 'purple', default: 'red' };
-        return `https://maps.google.com/mapfiles/ms/icons/${colors[primaryTag] || colors.default}-dot.png`;
-      };
+      Object.values(eventsByLocation).forEach(locationEvents => {
+        const firstEvent = locationEvents[0];
+        const getPinColor = (tags) => {
+            const primaryTag = tags[0];
+            const colors = { productive: 'blue', chill: 'green', wild: 'purple', default: 'red' };
+            return `https://maps.google.com/mapfiles/ms/icons/${colors[primaryTag] || colors.default}-dot.png`;
+        };
+        const markerIcon = locationEvents.length > 1 ? 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png' : getPinColor(firstEvent.tags);
 
-      const newMarkers = events.map(event => {
         const marker = new window.google.maps.Marker({
-          position: { lat: event.lat, lng: event.lng },
+          position: { lat: firstEvent.lat, lng: firstEvent.lng },
           map: map,
-          title: event.title,
-          icon: { url: getPinColor(event.tags) },
+          title: locationEvents.map(e => e.title).join(', '),
+          icon: { url: markerIcon },
           animation: window.google.maps.Animation.DROP,
         });
 
-        marker.addListener('mouseover', () => {
-          const isDark = theme === 'dark';
-          const bgColor = isDark ? 'rgba(17, 17, 22, 0.8)' : '#ffffff';
-          const textColor = isDark ? '#E5E7EB' : '#1F2937';
-          const subTextColor = isDark ? '#9CA3AF' : '#4B5563';
-          const borderColor = isDark ? 'rgba(109, 40, 217, 0.5)' : 'rgba(229, 231, 235, 1)';
+        marker.addListener('click', () => {
+          map.panTo(marker.getPosition());
+          const upcomingEvents = locationEvents
+            .sort((a, b) => new Date(a.start_at) - new Date(b.start_at))
+            .slice(0, 3);
 
           const contentString = `
-            <div 
-              style="
-                cursor: pointer; 
-                background-color: ${bgColor}; 
-                color: ${textColor}; 
-                ${isDark ? 'backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);' : ''}
-                border: 1px solid ${borderColor};
-                border-radius: 0.75rem; 
-                padding: 0.75rem 1rem; 
-                font-family: 'Inter', sans-serif;
-                width: 200px;
-                box-shadow: ${isDark ? 'none' : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)'};
-                text-align: left;
-              " 
-              onclick="window.selectEventFromMap('${event.id}')"
-            >
-              <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 1rem; letter-spacing: -0.025em;">${event.title}</h3>
-              <p style="margin: 0; font-size: 0.875rem; color: ${subTextColor};">${event.venue}</p>
+            <div style="background-color: #333; color: #fff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px;">
+              ${upcomingEvents.map(event => `
+                <div style="cursor: pointer; padding: 8px 0; border-bottom: ${upcomingEvents.length > 1 && upcomingEvents.indexOf(event) !== upcomingEvents.length - 1 ? '1px solid #555' : 'none'};" onclick="window.selectEventFromMap('${event.id}')">
+                  <h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #f3d19c;">${event.title}</h3>
+                  <p style="margin: 0; color: #ccc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p>
+                </div>
+              `).join('')}
             </div>
           `;
           infoWindow.setContent(contentString);
-          infoWindow.open({
-            anchor: marker,
-            map,
-          });
+          infoWindow.open({ anchor: marker, map });
         });
-
-        marker.addListener('click', () => setSelectedEvent(event));
-        
-        return marker;
       });
-      markersRef.current = newMarkers;
 
       map.addListener('click', () => infoWindow.close());
     }
@@ -267,7 +270,10 @@ const EventCard = ({ event, onSelect }) => (
                 <div><div className="uppercase tracking-wide text-sm text-yellow-500 dark:text-yellow-400 font-bold">{event.venue}</div><h2 className="block mt-1 text-xl sm:text-2xl leading-tight font-bold text-gray-900 dark:text-white">{event.title}</h2></div>
                 <div className="flex-shrink-0 ml-4 w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center"><svg className="h-6 w-6 text-yellow-500 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
             </div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">{event.description.substring(0, 100)}...</p>
+            <div className="mt-4 space-y-2">
+                <div className="flex items-center text-gray-600 dark:text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>{formatDate(event.start_at, { weekday: 'long', month: 'long', day: 'numeric' })}</span></div>
+                <div className="flex items-center text-gray-600 dark:text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>{formatTime(event.start_at)} - {formatTime(event.end_at)}</span></div>
+            </div>
             <div className="mt-6">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
         </div>
     </button>
@@ -284,7 +290,10 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
                 <div className="p-6 sm:p-8 md:p-12">
                     <div className="uppercase tracking-wide text-sm text-yellow-500 dark:text-yellow-400 font-bold">{event.venue}</div>
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">{event.title}</h1>
-                    <div className="mt-6"><p className="text-gray-600 dark:text-gray-400"><strong>Starts:</strong> {formatDate(event.start_at)}</p><p className="text-gray-500 dark:text-gray-400"><strong>Ends:</strong> {formatDate(event.end_at)}</p></div>
+                    <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>{formatDate(event.start_at, { weekday: 'long', month: 'long', day: 'numeric' })}</span></div>
+                        <div className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>{formatTime(event.start_at)} - {formatTime(event.end_at)}</span></div>
+                    </div>
                     <p className="mt-8 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">{event.description}</p>
                     <div className="mt-8">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
                     <div className="mt-10 pt-8 border-t border-gray-200 dark:border-yellow-800/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
