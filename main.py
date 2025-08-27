@@ -160,6 +160,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000", # Common port for create-react-app
     "http://localhost:5173", # Common port for Vite
+    "https://the-loop-5m7u.onrender.com", # Deployed frontend URL
 ]
 app.add_middleware(
     CORSMiddleware,
