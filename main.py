@@ -171,7 +171,7 @@ app.add_middleware(
 )
 
 # --- API Endpoints ---
-@app.get("/")
+@app.get("/", methods=["GET", "HEAD"])
 async def root():
     """A simple root endpoint to check if the API is running."""
     return {"message": "Event Aggregator API is running!"}
