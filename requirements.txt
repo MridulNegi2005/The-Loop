@@ -1,0 +1,8 @@
+# Backend requirements for The Loop (FastAPI backend)
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
