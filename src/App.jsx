@@ -344,7 +344,7 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
         formData.append('password', password);
 
         try {
-            const response = await fetch('http://localhost:8000/users/login', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData
@@ -406,7 +406,7 @@ const SignupPage = ({ setPage }) => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8000/users/signup', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -503,12 +503,12 @@ export default function App() {
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
 
-  const GOOGLE_MAPS_API_KEY = "AIzaSyB4ahphCSv4lWERGhBVL49c-8rhfe2W3uE"; 
+    const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('http://localhost:8000/events'); 
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/events`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setEvents(data);
