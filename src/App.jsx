@@ -40,16 +40,32 @@ const formatTime = (dateString) => { const options = { hour: 'numeric', minute: 
 const Tag = ({ text }) => { const tagColors = { productive: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 dark:border dark:border-blue-700', chill: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700', wild: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 dark:border dark:border-purple-700', tech: 'bg-indigo-100 text-indigo-800 dark:bg-violet-900/50 dark:text-violet-300 dark:border dark:border-violet-700', music: 'bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300 dark:border dark:border-pink-700', art: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border dark:border-yellow-700', fest: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 dark:border dark:border-red-700', dance: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 dark:border dark:border-teal-700', 'late-night': 'bg-gray-200 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300 dark:border dark:border-gray-600', workshop: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 dark:border dark:border-orange-700', hackathon: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border dark:border-cyan-700', default: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300 dark:border dark:border-gray-700' }; const colorClass = tagColors[text] || tagColors.default; return <span className={`inline-block rounded-full px-3 py-1 text-xs sm:text-sm font-semibold mr-2 mb-2 ${colorClass}`}>#{text}</span>; };
 
 const formatICSDate = (date) => date.toISOString().replace(/-|:|\.\d{3}/g, '');
-const downloadICSFile = (event) => {
-    const escapeText = (text) => text.replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
-    const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', `UID:${event.id}@theloop.com`, `DTSTAMP:${formatICSDate(new Date())}`, `DTSTART:${formatICSDate(new Date(event.start_at))}`, `DTEND:${formatICSDate(new Date(event.end_at))}`, `SUMMARY:${escapeText(event.title)}`, `DESCRIPTION:${escapeText(event.description)}`, `LOCATION:${escapeText(event.venue)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\n');
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${event.title.replace(/ /g, '_')}.ics`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+// Smart Add to Calendar
+const addToCalendar = (event) => {
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const formatGoogleDate = (dateString) => {
+        const d = new Date(dateString);
+        return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    };
+    if (isAndroid) {
+        // Google Calendar link
+        const start = formatGoogleDate(event.start_at);
+        const end = formatGoogleDate(event.end_at);
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.venue)}`;
+        window.open(url, '_blank');
+    } else {
+        // .ics fallback
+        const escapeText = (text) => text.replace(/,/g, '\,').replace(/;/g, '\;').replace(/\n/g, '\n');
+        const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', `UID:${event.id}@theloop.com`, `DTSTAMP:${formatICSDate(new Date())}`, `DTSTART:${formatICSDate(new Date(event.start_at))}`, `DTEND:${formatICSDate(new Date(event.end_at))}`, `SUMMARY:${escapeText(event.title)}`, `DESCRIPTION:${escapeText(event.description)}`, `LOCATION:${escapeText(event.venue)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\n');
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${event.title.replace(/ /g, '_')}.ics`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 };
 
 // --- COMPONENTS (Defined outside of App for performance) ---
@@ -154,7 +170,8 @@ const SingleEventMap = ({ event, theme }) => {
 
 const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewMode, theme, setTheme }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [showPwaButton, setShowPwaButton] = useState(false);
+                const [showPwaButton, setShowPwaButton] = useState(false);
+                const [showAbout, setShowAbout] = useState(false);
     const deferredPromptRef = useRef(null);
 
     useEffect(() => {
@@ -356,8 +373,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => (
                         {mapScriptLoaded ? <SingleEventMap event={event} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
                     </div>
                     <div className="flex flex-col items-stretch gap-4 w-full md:w-auto">
-                        <button className="flex items-center justify-center gap-3 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg><span>Remind Me</span></button>
-                        <button onClick={() => downloadICSFile(event)} className="flex items-center justify-center gap-3 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
+                        <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-3 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
                     </div>
                 </div>
             </div>
