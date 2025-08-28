@@ -3,10 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>College Events</title>
+  <title>The Loop</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png">
+  <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#7c3aed">
   </head>
   <body class="bg-gray-50">
     <div id="root"></div>
+    <script>
+      // Show install button for PWA on mobile
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.getElementById('pwa-download-btn');
+        if (btn) btn.style.display = 'block';
+      });
+      function installPWA() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+          });
+        }
+      }
+    </script>
+    <button id="pwa-download-btn" onclick="installPWA()" style="display:none;position:fixed;bottom:24px;right:24px;z-index:9999;background:#7c3aed;color:#fff;border:none;border-radius:999px;padding:16px 28px;font-size:1.1rem;box-shadow:0 4px 24px #7c3aed55;cursor:pointer;">Download The Loop App</button>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
