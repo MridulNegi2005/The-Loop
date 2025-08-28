@@ -725,8 +725,14 @@ export default function App() {
     // Route components
     function EventDetailsRoute() {
         const { id } = useParams();
-        const event = events.find(e => e.id === id);
-        if (!event) return <div className="text-center py-10 text-gray-500">Event not found.</div>;
+        // Find event by id, allowing for string/number mismatch
+        const event = events.find(e => e.id.toString() === id.toString());
+        if (isLoading) {
+            return <div className="text-center py-10 text-gray-500">Loading event...</div>;
+        }
+        if (!event) {
+            return <div className="text-center py-10 text-gray-500">Event not found. (Check the event link or try refreshing the events list.)</div>;
+        }
         return <EventDetailsPage event={event} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
     }
 
