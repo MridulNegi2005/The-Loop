@@ -544,17 +544,21 @@ const LandingPage = ({ setPage }) => {
             <div className="relative z-10">
                 <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter">Find Your Vibe</h1>
                 <p className="mt-4 text-lg text-gray-400 max-w-2xl">Never miss out on what's happening on campus. The Loop is your one-stop shop for all college events.</p>
-                {showPwaButton && (
-                  <button
-                    onClick={handlePwaInstall}
-                    className="mt-8 mb-2 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    style={{animation: 'fadeIn 0.4s'}}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
-                    Download App
-                  </button>
-                )}
-                <button onClick={() => setPage('events')} className="mt-4 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
+                                {showPwaButton && (
+                                    <div className="flex justify-center w-full">
+                                        <button
+                                            onClick={handlePwaInstall}
+                                            className="mt-8 mb-2 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                                            style={{animation: 'fadeIn 0.4s'}}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
+                                            Download App
+                                        </button>
+                                    </div>
+                                )}
+                                <div className="flex justify-center w-full">
+                                    <button onClick={() => setPage('events')} className="mt-4 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
+                                </div>
             </div>
         </div>
     );
