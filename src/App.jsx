@@ -235,7 +235,13 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
 
     const goHome = () => { setSelectedEvent(null); setPage('events'); setViewMode('list'); setIsMenuOpen(false); }
     const navAction = (page) => { setPage(page); setIsMenuOpen(false); }
-    const handleLogout = () => { setIsLoggedIn(false); setPage('events'); setIsMenuOpen(false); }
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+        localStorage.setItem('isLoggedIn', 'false');
+        localStorage.removeItem('token');
+        setPage('events');
+        setIsMenuOpen(false);
+    }
 
     return (
         <header className="bg-white dark:bg-[#161b22]/80 backdrop-blur-sm border-b border-gray-200 dark:border-purple-700/50 sticky top-0 z-20">
@@ -416,9 +422,11 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
             }
         }
     };
-    // Remind Me logic (simple: alert, can be replaced with notification/cookie logic)
+    // Remind Me logic (toggle state)
+    const [reminded, setReminded] = React.useState(false);
     const handleRemindMe = () => {
-        alert('You will be reminded before the event! (Demo: implement notification/cookie logic here)');
+        setReminded(r => !r);
+        // Here you could add notification/cookie logic
     };
     return (
         <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
@@ -443,12 +451,21 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
                             <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
                             {mapScriptLoaded ? <SingleEventMap event={event} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
                         </div>
-                        <div className="flex flex-col gap-3 w-full md:w-auto">
-                            <div className="flex flex-row gap-3">
-                                <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
-                                <button onClick={handleRemindMe} className="flex items-center justify-center gap-2 bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 7.165 6 9.388 6 12v2.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>Remind Me</button>
-                                <button onClick={handleShare} className="flex items-center justify-center gap-2 bg-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm-6 8a6 6 0 1112 0H9z" /></svg>Share</button>
+                        <div className="flex flex-col gap-4 w-full max-w-md mx-auto mt-8 md:mt-0 items-center">
+                            <div className="border-b border-gray-200 dark:border-purple-700/50 pb-2 mb-2 w-full text-center">
+                                <span className="text-lg font-semibold text-purple-700 dark:text-purple-300">Event Actions</span>
                             </div>
+                            <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-2 bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300 w-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
+                            <button onClick={handleRemindMe} className={`flex items-center justify-center gap-2 ${reminded ? 'bg-purple-800' : 'bg-purple-500'} text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300 w-full`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 7.165 6 9.388 6 12v2.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                {reminded ? 'Remind Me (Set!)' : 'Remind Me'}
+                            </button>
+                            <button onClick={handleShare} className="flex items-center justify-center gap-2 bg-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300 w-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm-6 8a6 6 0 1112 0H9z" /></svg>Share</button>
+                            {/* Suggestions for filling empty space: */}
+                            {/* 1. Show a countdown timer to event start */}
+                            {/* 2. Show a list of similar/upcoming events */}
+                            {/* 3. Add a fun event-related quote or fact */}
+                            {/* 4. Show a QR code for sharing the event */}
                         </div>
                     </div>
                 </div>
@@ -488,6 +505,10 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
             console.log("Received token:", data.access_token); 
 
             setIsLoggedIn(true);
+            localStorage.setItem('isLoggedIn', 'true');
+            if (data.access_token) {
+                localStorage.setItem('token', data.access_token);
+            }
             setPage('events');
 
         } catch (err) {
@@ -659,7 +680,9 @@ const LandingPage = ({ setPage }) => {
 
 export default function App() {
     const [events, setEvents] = useState([]);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    // Persist login state using localStorage
+    const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
+    const [token, setToken] = useState(() => localStorage.getItem('token') || '');
     const [viewMode, setViewMode] = useState('list');
     const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -683,6 +706,16 @@ export default function App() {
     React.useEffect(() => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
     }, [theme]);
+
+    // Keep login state in sync with localStorage
+    React.useEffect(() => {
+        localStorage.setItem('isLoggedIn', isLoggedIn);
+        if (token) {
+            localStorage.setItem('token', token);
+        } else {
+            localStorage.removeItem('token');
+        }
+    }, [isLoggedIn, token]);
 
     const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -749,20 +782,15 @@ export default function App() {
                 .animate-fadeIn { animation: fadeIn 0.7s; }
             `}</style>
             {location.pathname !== '/' && !showSplash && (
-                <div className="flex items-center">
-                    <button onClick={() => navigate(-1)} className="p-2 m-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-purple-600 dark:text-purple-300 focus:outline-none" aria-label="Back">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                    </button>
-                    <Header
-                        setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
-                        isLoggedIn={isLoggedIn}
-                        setIsLoggedIn={setIsLoggedIn}
-                        setSelectedEvent={event => event ? navigate(`/events/${event.id}`) : navigate('/events')}
-                        setViewMode={setViewMode}
-                        theme={theme}
-                        setTheme={setTheme}
-                    />
-                </div>
+                <Header
+                    setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
+                    isLoggedIn={isLoggedIn}
+                    setIsLoggedIn={setIsLoggedIn}
+                    setSelectedEvent={event => event ? navigate(`/events/${event.id}`) : navigate('/events')}
+                    setViewMode={setViewMode}
+                    theme={theme}
+                    setTheme={setTheme}
+                />
             )}
             <div className="page-transition">
                 {showSplash ? (
