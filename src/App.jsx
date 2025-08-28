@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 
 // --- MOCK DATA ---
 const mockEvents = [
@@ -206,7 +207,8 @@ const SingleEventMap = ({ event, theme }) => {
 
 const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewMode, theme, setTheme }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-                const [showPwaButton, setShowPwaButton] = useState(false);
+
+    const [showPwaButton, setShowPwaButton] = useState(false);
                 const [showAbout, setShowAbout] = useState(false);
     const deferredPromptRef = useRef(null);
 
@@ -390,32 +392,70 @@ const EventList = ({ events, setSelectedEvent }) => {
     );
 };
 
-const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => (
-    <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
-        <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl overflow-hidden shadow-lg">
-            <div className="p-6 sm:p-8 md:p-12">
-                <div className="uppercase tracking-wide text-sm text-purple-600 dark:text-purple-400 font-bold">{event.venue}</div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">{event.title}</h1>
-                <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>{formatDate(event.start_at, { weekday: 'long', month: 'long', day: 'numeric' })}</span></div>
-                    <div className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>{formatTime(event.start_at)} - {formatTime(event.end_at)}</span></div>
-                </div>
-                <p className="mt-8 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">{event.description}</p>
-                <div className="mt-8">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
-                <div className="mt-10 pt-8 border-t border-gray-200 dark:border-purple-700/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    <div className="w-full md:w-1/2">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Location</h3>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
-                        {mapScriptLoaded ? <SingleEventMap event={event} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
+
+const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
+    const navigate = useNavigate();
+    // Share logic
+    const shareUrl = window.location.origin + `/events/${event.id}`;
+    const shareText = `${event.title} at ${event.venue} on ${formatDate(event.start_at, { weekday: 'long', month: 'long', day: 'numeric' })}`;
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: event.title,
+                    text: shareText,
+                    url: shareUrl,
+                });
+            } catch (e) {}
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                alert('Link copied to clipboard!');
+            } catch (e) {
+                window.prompt('Copy this link:', shareUrl);
+            }
+        }
+    };
+    // Remind Me logic (simple: alert, can be replaced with notification/cookie logic)
+    const handleRemindMe = () => {
+        alert('You will be reminded before the event! (Demo: implement notification/cookie logic here)');
+    };
+    return (
+        <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
+            <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl overflow-hidden shadow-lg">
+                <div className="p-6 sm:p-8 md:p-12">
+                    <div className="flex items-center gap-2 mb-2">
+                        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-purple-600 dark:text-purple-300 focus:outline-none" aria-label="Back">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <span className="uppercase tracking-wide text-sm text-purple-600 dark:text-purple-400 font-bold">{event.venue}</span>
                     </div>
-                    <div className="flex flex-col items-stretch gap-4 w-full md:w-auto">
-                        <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-3 bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mt-2">{event.title}</h1>
+                    <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>{formatDate(event.start_at, { weekday: 'long', month: 'long', day: 'numeric' })}</span></div>
+                        <div className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>{formatTime(event.start_at)} - {formatTime(event.end_at)}</span></div>
+                    </div>
+                    <p className="mt-8 text-lg text-gray-700 dark:text-gray-300 leading-relaxed">{event.description}</p>
+                    <div className="mt-8">{event.tags.map(tag => <Tag key={tag} text={tag} />)}</div>
+                    <div className="mt-10 pt-8 border-t border-gray-200 dark:border-purple-700/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                        <div className="w-full md:w-1/2">
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Location</h3>
+                            <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
+                            {mapScriptLoaded ? <SingleEventMap event={event} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
+                        </div>
+                        <div className="flex flex-col gap-3 w-full md:w-auto">
+                            <div className="flex flex-row gap-3">
+                                <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
+                                <button onClick={handleRemindMe} className="flex items-center justify-center gap-2 bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 7.165 6 9.388 6 12v2.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>Remind Me</button>
+                                <button onClick={handleShare} className="flex items-center justify-center gap-2 bg-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-600 transition-colors duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm-6 8a6 6 0 1112 0H9z" /></svg>Share</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
-);
+        </main>
+    );
+};
 
 const LoginPage = ({ setPage, setIsLoggedIn }) => {
     const [email, setEmail] = useState('');
@@ -619,26 +659,26 @@ const LandingPage = ({ setPage }) => {
 
 export default function App() {
     const [events, setEvents] = useState([]);
-    const [page, setPage] = useState('landing');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
     const [viewMode, setViewMode] = useState('list');
     const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [theme, setTheme] = useState('dark');
     const [showSplash, setShowSplash] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
     // Show splash animation before skipping landing page in installed PWA
     React.useEffect(() => {
         if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
             setShowSplash(true);
             setTimeout(() => {
-                setPage('events');
+                navigate('/events');
                 setShowSplash(false);
             }, 1200); // 1.2s splash
         }
-    }, []);
+    }, [navigate]);
 
     React.useEffect(() => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -664,8 +704,10 @@ export default function App() {
         fetchEvents();
     }, []);
 
+    // Load Google Maps script when needed
     React.useEffect(() => {
-        if ((viewMode === 'map' || selectedEvent) && !window.google) {
+        const isMapPage = location.pathname.startsWith('/events') && (viewMode === 'map' || location.pathname.startsWith('/events/'));
+        if (isMapPage && !window.google) {
             if (!document.getElementById('google-maps-script')) {
                 const script = document.createElement('script');
                 script.id = 'google-maps-script';
@@ -678,11 +720,46 @@ export default function App() {
         } else if (window.google && !mapScriptLoaded) {
             setMapScriptLoaded(true);
         }
-    }, [viewMode, selectedEvent]);
+    }, [viewMode, location.pathname]);
 
-        const renderPage = () => {
-            if (showSplash) {
-                return (
+    // Route components
+    function EventDetailsRoute() {
+        const { id } = useParams();
+        const event = events.find(e => e.id === id);
+        if (!event) return <div className="text-center py-10 text-gray-500">Event not found.</div>;
+        return <EventDetailsPage event={event} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
+    }
+
+    return (
+        <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0d1117] text-gray-100'}`}>
+            <style>{`
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .page-transition { animation: fadeIn 0.4s ease-in-out; }
+                .gm-style-iw-d { overflow: hidden !important; }
+                .gm-style .gm-style-iw-c { padding: 0 !important; border-radius: 0.75rem !important; box-shadow: none !important; background-color: transparent !important; }
+                .gm-style .gm-style-iw-t::after { display: none; }
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                .animate-fadeIn { animation: fadeIn 0.7s; }
+            `}</style>
+            {location.pathname !== '/' && !showSplash && (
+                <div className="flex items-center">
+                    <button onClick={() => navigate(-1)} className="p-2 m-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-purple-600 dark:text-purple-300 focus:outline-none" aria-label="Back">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <Header
+                        setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
+                        isLoggedIn={isLoggedIn}
+                        setIsLoggedIn={setIsLoggedIn}
+                        setSelectedEvent={event => event ? navigate(`/events/${event.id}`) : navigate('/events')}
+                        setViewMode={setViewMode}
+                        theme={theme}
+                        setTheme={setTheme}
+                    />
+                </div>
+            )}
+            <div className="page-transition">
+                {showSplash ? (
                     <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d1117] text-white animate-fadeIn">
                         <img
                           src="/icon-192x192.png"
@@ -692,54 +769,29 @@ export default function App() {
                         />
                         <span className="text-3xl font-bold tracking-tight">The Loop</span>
                     </div>
-                );
-            }
-            if (page === 'landing') {
-                return <LandingPage setPage={setPage} />;
-            }
-            if (page === 'login') {
-                return <LoginPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
-            }
-            if (page === 'signup') {
-                return <SignupPage setPage={setPage} />;
-            }
-            if (page === 'interest_selection') {
-                return <InterestSelectorPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
-            }
-            if (page === 'events') {
-                if (selectedEvent) {
-                    return <EventDetailsPage event={selectedEvent} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
-                }
-                return <EventsContainer
-                    events={events}
-                    setSelectedEvent={setSelectedEvent}
-                    isLoading={isLoading}
-                    error={error}
-                    setViewMode={setViewMode}
-                    viewMode={viewMode}
-                    mapScriptLoaded={mapScriptLoaded}
-                    theme={theme}
-                />;
-            }
-            return <LandingPage setPage={setPage} />;
-        };
-
-        return (
-            <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0d1117] text-gray-100'}`}>
-                <style>{`
-                    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                    .page-transition { animation: fadeIn 0.4s ease-in-out; }
-                    .gm-style-iw-d { overflow: hidden !important; }
-                    .gm-style .gm-style-iw-c { padding: 0 !important; border-radius: 0.75rem !important; box-shadow: none !important; background-color: transparent !important; }
-                    .gm-style .gm-style-iw-t::after { display: none; }
-                    .no-scrollbar::-webkit-scrollbar { display: none; }
-                    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                    .animate-fadeIn { animation: fadeIn 0.7s; }
-                `}</style>
-                {page !== 'landing' && !showSplash && <Header setPage={setPage} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} setSelectedEvent={setSelectedEvent} setViewMode={setViewMode} theme={theme} setTheme={setTheme} />}
-                <div key={selectedEvent ? selectedEvent.id : page} className="page-transition">
-                    {renderPage()}
-                </div>
+                ) : (
+                    <Routes>
+                        <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} />} />
+                        <Route path="/login" element={<LoginPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
+                        <Route path="/signup" element={<SignupPage setPage={page => navigate(`/${page}`)} />} />
+                        <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
+                        <Route path="/events" element={
+                            <EventsContainer
+                                events={events}
+                                setSelectedEvent={event => event ? navigate(`/events/${event.id}`) : navigate('/events')}
+                                isLoading={isLoading}
+                                error={error}
+                                setViewMode={setViewMode}
+                                viewMode={viewMode}
+                                mapScriptLoaded={mapScriptLoaded}
+                                theme={theme}
+                            />
+                        } />
+                        <Route path="/events/:id" element={<EventDetailsRoute />} />
+                        <Route path="*" element={<div className="text-center py-10 text-gray-500">Page not found.</div>} />
+                    </Routes>
+                )}
             </div>
-        );
-    }
+        </div>
+    );
+}
