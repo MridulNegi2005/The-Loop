@@ -12,7 +12,8 @@ export default defineConfig({
       manifest: {
         name: 'The Loop',
         short_name: 'Loop',
-        start_url: '.',
+        start_url: '/',
+        scope: '/',
         display: 'standalone',
         background_color: '#0d1117',
         theme_color: '#7c3aed',
