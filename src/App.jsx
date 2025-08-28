@@ -151,8 +151,33 @@ const SingleEventMap = ({ event, theme }) => {
     return <div ref={mapRef} className="mt-4 w-full h-64 md:h-80 rounded-lg border border-gray-200 dark:border-gray-800" />;
 };
 
+
 const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewMode, theme, setTheme }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showPwaButton, setShowPwaButton] = useState(false);
+    const deferredPromptRef = useRef(null);
+
+    useEffect(() => {
+        // Only show on mobile and if PWA is installable
+        const handler = (e) => {
+            e.preventDefault();
+            deferredPromptRef.current = e;
+            setShowPwaButton(true);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handlePwaInstall = () => {
+        if (deferredPromptRef.current) {
+            deferredPromptRef.current.prompt();
+            deferredPromptRef.current.userChoice.then(() => {
+                deferredPromptRef.current = null;
+                setShowPwaButton(false);
+            });
+        }
+    };
+
     const goHome = () => { setSelectedEvent(null); setPage('events'); setViewMode('list'); setIsMenuOpen(false); }
     const navAction = (page) => { setPage(page); setIsMenuOpen(false); }
     const handleLogout = () => { setIsLoggedIn(false); setPage('events'); setIsMenuOpen(false); }
@@ -160,7 +185,19 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
     return (
         <header className="bg-white dark:bg-[#161b22]/80 backdrop-blur-sm border-b border-gray-200 dark:border-purple-700/50 sticky top-0 z-20">
             <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-                <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-400 transition-colors">The Loop</button>
+                <div className="flex items-center gap-2">
+                  <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-400 transition-colors">The Loop</button>
+                  {showPwaButton && (
+                    <button
+                      onClick={handlePwaInstall}
+                      className="ml-3 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                      style={{animation: 'fadeIn 0.4s'}}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
+                      Download App
+                    </button>
+                  )}
+                </div>
                 <div className="hidden md:flex items-center space-x-2">
                     <button onClick={goHome} className="text-gray-600 dark:text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md transition-colors">All Events</button>
                     {isLoggedIn && <button onClick={() => alert('My Feed is coming soon!')} className="text-gray-600 dark:text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md transition-colors">My Feed</button>}
