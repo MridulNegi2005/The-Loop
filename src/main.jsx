@@ -27,12 +27,13 @@ function showPwaUpdateToast() {
   if (document.getElementById('pwa-update-toast')) return;
   const toast = document.createElement('div');
   toast.id = 'pwa-update-toast';
-  toast.innerHTML = `
-    <div style="position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#7c3aed;color:#fff;padding:16px 32px;border-radius:999px;box-shadow:0 4px 24px #7c3aed55;z-index:9999;display:flex;align-items:center;gap:16px;font-size:1.1rem;">
-      <span style="font-weight:bold;">A new version is available.</span>
-      <button id="pwa-update-btn" style="background:#fff;color:#7c3aed;font-weight:bold;padding:8px 18px;border:none;border-radius:999px;cursor:pointer;">Update</button>
-    </div>
-  `;
+    toast.innerHTML = `
+      <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232136;color:#fff;padding:10px 18px;border-radius:14px;box-shadow:0 2px 12px #7c3aed33;z-index:9999;display:flex;align-items:center;gap:10px;font-size:0.98rem;min-width:220px;max-width:90vw;">
+        <svg style="width:20px;height:20px;flex-shrink:0;" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#a78bfa" stroke-width="2" fill="#7c3aed"/><path d="M12 8v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="#fff"/></svg>
+        <span style="font-weight:500;">New version available.</span>
+        <button id="pwa-update-btn" style="background:#fff;color:#7c3aed;font-weight:600;padding:4px 16px;border:none;border-radius:8px;cursor:pointer;font-size:0.98rem;transition:background 0.2s;">Update</button>
+      </div>
+    `;
   document.body.appendChild(toast);
   document.getElementById('pwa-update-btn').onclick = () => {
     window.location.reload();
