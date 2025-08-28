@@ -514,114 +514,174 @@ const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMo
     </main>
 );
 
-const LandingPage = ({ setPage }) => (
-    <div className="relative flex flex-col items-center justify-end min-h-screen text-center px-4 pb-20">
-        <SplineScene />
-        <div className="relative z-10">
-            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter">Find Your Vibe</h1>
-            <p className="mt-4 text-lg text-gray-400 max-w-2xl">Never miss out on what's happening on campus. The Loop is your one-stop shop for all college events.</p>
-            <button onClick={() => setPage('events')} className="mt-8 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
+const LandingPage = ({ setPage }) => {
+    const [showPwaButton, setShowPwaButton] = React.useState(false);
+    const deferredPromptRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const handler = (e) => {
+            e.preventDefault();
+            deferredPromptRef.current = e;
+            setShowPwaButton(true);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handlePwaInstall = () => {
+        if (deferredPromptRef.current) {
+            deferredPromptRef.current.prompt();
+            deferredPromptRef.current.userChoice.then(() => {
+                deferredPromptRef.current = null;
+                setShowPwaButton(false);
+            });
+        }
+    };
+
+    return (
+        <div className="relative flex flex-col items-center justify-end min-h-screen text-center px-4 pb-20">
+            <SplineScene />
+            <div className="relative z-10">
+                <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter">Find Your Vibe</h1>
+                <p className="mt-4 text-lg text-gray-400 max-w-2xl">Never miss out on what's happening on campus. The Loop is your one-stop shop for all college events.</p>
+                {showPwaButton && (
+                  <button
+                    onClick={handlePwaInstall}
+                    className="mt-8 mb-2 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    style={{animation: 'fadeIn 0.4s'}}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
+                    Download App
+                  </button>
+                )}
+                <button onClick={() => setPage('events')} className="mt-4 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
+            </div>
         </div>
-    </div>
-);
+    );
+};
+
 
 export default function App() {
-  const [events, setEvents] = useState([]);
-  const [page, setPage] = useState('landing');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [viewMode, setViewMode] = useState('list');
-  const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [theme, setTheme] = useState('dark');
+    const [events, setEvents] = useState([]);
+    const [page, setPage] = useState('landing');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [viewMode, setViewMode] = useState('list');
+    const [mapScriptLoaded, setMapScriptLoaded] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [theme, setTheme] = useState('dark');
+    const [showSplash, setShowSplash] = useState(false);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
+    // Show splash animation before skipping landing page in installed PWA
+    React.useEffect(() => {
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            setShowSplash(true);
+            setTimeout(() => {
+                setPage('events');
+                setShowSplash(false);
+            }, 1200); // 1.2s splash
+        }
+    }, []);
+
+    React.useEffect(() => {
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+    }, [theme]);
 
     const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/events`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        setEvents(data);
-      } catch (e) {
-        console.error("Failed to fetch events:", e);
-        setError("Could not connect to the server. Displaying sample data.");
-        setEvents(mockEvents);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchEvents();
-  }, []);
+    React.useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/events`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                setEvents(data);
+            } catch (e) {
+                console.error("Failed to fetch events:", e);
+                setError("Could not connect to the server. Displaying sample data.");
+                setEvents(mockEvents);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchEvents();
+    }, []);
 
-  useEffect(() => {
-    if ((viewMode === 'map' || selectedEvent) && !window.google) {
-      if (!document.getElementById('google-maps-script')) {
-        const script = document.createElement('script');
-        script.id = 'google-maps-script';
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => setMapScriptLoaded(true);
-        document.head.appendChild(script);
-      }
-    } else if (window.google && !mapScriptLoaded) {
-      setMapScriptLoaded(true);
-    }
-  }, [viewMode, selectedEvent]);
-
-  const renderPage = () => {
-    if (page === 'landing') {
-        return <LandingPage setPage={setPage} />;
-    }
-    if (page === 'login') {
-        return <LoginPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
-    }
-    if (page === 'signup') {
-        return <SignupPage setPage={setPage} />;
-    }
-    if (page === 'interest_selection') {
-        return <InterestSelectorPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
-    }
-    if (page === 'events') {
-        if (selectedEvent) {
-            return <EventDetailsPage event={selectedEvent} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
+    React.useEffect(() => {
+        if ((viewMode === 'map' || selectedEvent) && !window.google) {
+            if (!document.getElementById('google-maps-script')) {
+                const script = document.createElement('script');
+                script.id = 'google-maps-script';
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
+                script.async = true;
+                script.defer = true;
+                script.onload = () => setMapScriptLoaded(true);
+                document.head.appendChild(script);
+            }
+        } else if (window.google && !mapScriptLoaded) {
+            setMapScriptLoaded(true);
         }
-        return <EventsContainer 
-                    events={events} 
-                    setSelectedEvent={setSelectedEvent} 
-                    isLoading={isLoading} 
-                    error={error} 
-                    setViewMode={setViewMode} 
+    }, [viewMode, selectedEvent]);
+
+        const renderPage = () => {
+            if (showSplash) {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d1117] text-white animate-fadeIn">
+                        <svg className="w-20 h-20 mb-6 animate-bounce" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="32" cy="32" r="32" fill="#7c3aed" />
+                            <text x="50%" y="54%" textAnchor="middle" fill="#fff" fontSize="2.2rem" fontWeight="bold" dy=".3em">LOOP</text>
+                        </svg>
+                        <span className="text-3xl font-bold tracking-tight">The Loop</span>
+                    </div>
+                );
+            }
+            if (page === 'landing') {
+                return <LandingPage setPage={setPage} />;
+            }
+            if (page === 'login') {
+                return <LoginPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
+            }
+            if (page === 'signup') {
+                return <SignupPage setPage={setPage} />;
+            }
+            if (page === 'interest_selection') {
+                return <InterestSelectorPage setPage={setPage} setIsLoggedIn={setIsLoggedIn} />;
+            }
+            if (page === 'events') {
+                if (selectedEvent) {
+                    return <EventDetailsPage event={selectedEvent} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
+                }
+                return <EventsContainer
+                    events={events}
+                    setSelectedEvent={setSelectedEvent}
+                    isLoading={isLoading}
+                    error={error}
+                    setViewMode={setViewMode}
                     viewMode={viewMode}
                     mapScriptLoaded={mapScriptLoaded}
                     theme={theme}
                 />;
-    }
-    return <LandingPage setPage={setPage} />;
-  };
+            }
+            return <LandingPage setPage={setPage} />;
+        };
 
-  return (
-    <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0d1117] text-gray-100'}`}>
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .page-transition { animation: fadeIn 0.4s ease-in-out; }
-        .gm-style-iw-d { overflow: hidden !important; }
-        .gm-style .gm-style-iw-c { padding: 0 !important; border-radius: 0.75rem !important; box-shadow: none !important; background-color: transparent !important; }
-        .gm-style .gm-style-iw-t::after { display: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-      {page !== 'landing' && <Header setPage={setPage} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} setSelectedEvent={setSelectedEvent} setViewMode={setViewMode} theme={theme} setTheme={setTheme} />}
-      <div key={selectedEvent ? selectedEvent.id : page} className="page-transition">
-        {renderPage()}
-      </div>
-    </div>
-  );
-}
+        return (
+            <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0d1117] text-gray-100'}`}>
+                <style>{`
+                    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                    .page-transition { animation: fadeIn 0.4s ease-in-out; }
+                    .gm-style-iw-d { overflow: hidden !important; }
+                    .gm-style .gm-style-iw-c { padding: 0 !important; border-radius: 0.75rem !important; box-shadow: none !important; background-color: transparent !important; }
+                    .gm-style .gm-style-iw-t::after { display: none; }
+                    .no-scrollbar::-webkit-scrollbar { display: none; }
+                    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                    .animate-fadeIn { animation: fadeIn 0.7s; }
+                `}</style>
+                {page !== 'landing' && !showSplash && <Header setPage={setPage} isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} setSelectedEvent={setSelectedEvent} setViewMode={setViewMode} theme={theme} setTheme={setTheme} />}
+                <div key={selectedEvent ? selectedEvent.id : page} className="page-transition">
+                    {renderPage()}
+                </div>
+            </div>
+        );
+    }
