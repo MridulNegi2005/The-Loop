@@ -632,10 +632,12 @@ export default function App() {
             if (showSplash) {
                 return (
                     <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d1117] text-white animate-fadeIn">
-                        <svg className="w-20 h-20 mb-6 animate-bounce" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="32" cy="32" r="32" fill="#7c3aed" />
-                            <text x="50%" y="54%" textAnchor="middle" fill="#fff" fontSize="2.2rem" fontWeight="bold" dy=".3em">LOOP</text>
-                        </svg>
+                        <img
+                          src="/icon-192x192.png"
+                          alt="The Loop App Icon"
+                          className="w-20 h-20 mb-6 animate-bounce rounded-2xl shadow-lg"
+                          style={{ background: '#fff' }}
+                        />
                         <span className="text-3xl font-bold tracking-tight">The Loop</span>
                     </div>
                 );
