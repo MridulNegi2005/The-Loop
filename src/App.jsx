@@ -169,7 +169,7 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
                 const eventsToShow = upcomingEvents.slice(0, 3);
                 const hasMoreEvents = upcomingEvents.length > 3;
                 // Add data-lat/lng for mobile tap
-                const contentString = `<div style="background-color: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px; position: relative;" class="map-hoverbox" data-lat="${firstEvent.lat}" data-lng="${firstEvent.lng}"><button onclick="window.closeInfoWindow()" style="position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #a5b4fc; font-size: 18px; cursor: pointer;">&times;</button><h2 style="font-weight: bold; font-size: 18px; color: #a78bfa; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #4338ca;">${firstEvent.venue}</h2>${eventsToShow.length > 0 ? eventsToShow.map(event => `<div style="cursor: pointer; padding: 8px 0; border-bottom: ${eventsToShow.length > 1 && eventsToShow.indexOf(event) !== eventsToShow.length - 1 ? '1px solid #312e81' : 'none'};" onclick="window.selectEventFromMap('${event.id}')"><h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #c7d2fe;">${event.title}</h3><p style="margin: 0; color: #a5b4fc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p></div>`).join('') : '<p style="margin: 0; color: #a5b4fc; font-size: 14px; text-align: center;">No upcoming events here.</p>'}${hasMoreEvents ? '<p style="text-align: center; margin-top: 8px; color: #818cf8; font-size: 12px;">...and more</p>' : ''}</div>`;
+                const contentString = `<div style="background-color: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px; position: relative;" class="map-hoverbox" data-lat="${firstEvent.lat}" data-lng="${firstEvent.lng}"><button onclick="window.closeInfoWindow()" style="position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #a5b4fc; font-size: 28px; line-height: 1; cursor: pointer; transition: color 0.2s;">&times;</button><h2 style="font-weight: bold; font-size: 18px; color: #a78bfa; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #4338ca;">${firstEvent.venue}</h2>${eventsToShow.length > 0 ? eventsToShow.map(event => `<div style="cursor: pointer; padding: 8px 0; border-bottom: ${eventsToShow.length > 1 && eventsToShow.indexOf(event) !== eventsToShow.length - 1 ? '1px solid #312e81' : 'none'};" onclick="window.selectEventFromMap('${event.id}')"><h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #c7d2fe;">${event.title}</h3><p style="margin: 0; color: #a5b4fc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p></div>`).join('') : '<p style="margin: 0; color: #a5b4fc; font-size: 14px; text-align: center;">No upcoming events here.</p>'}${hasMoreEvents ? '<p style="text-align: center; margin-top: 8px; color: #818cf8; font-size: 12px;">...and more</p>' : ''}</div>`;
 
                 // Desktop: show on hover
                 marker.addListener('mouseover', () => {
@@ -776,7 +776,12 @@ export default function App() {
                 .page-transition { animation: fadeIn 0.4s ease-in-out; }
                 .gm-style-iw-d { overflow: hidden !important; }
                 .gm-style .gm-style-iw-c { padding: 0 !important; border-radius: 0.75rem !important; box-shadow: none !important; background-color: transparent !important; }
-                .gm-style .gm-style-iw-t::after { display: none; }
+                /* Hide Google Maps InfoWindow arrow only */
+                .gm-style .gm-style-iw-t::after { display: none !important; }
+                .gm-style .gm-style-iw-t::before { display: none !important; }
+                /* Hide Google Maps' default close button */
+                .gm-style-iw button[title="Close"] { display: none !important; }
+                .gm-style-iw .gm-ui-hover-effect { display: none !important; }
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 .animate-fadeIn { animation: fadeIn 0.7s; }
