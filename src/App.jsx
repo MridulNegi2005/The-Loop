@@ -692,16 +692,16 @@ export default function App() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Show splash animation before skipping landing page in installed PWA
+    // Show splash animation only when starting from root in installed PWA
     React.useEffect(() => {
-        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        if ((window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) && location.pathname === '/') {
             setShowSplash(true);
             setTimeout(() => {
                 navigate('/events');
                 setShowSplash(false);
             }, 1200); // 1.2s splash
         }
-    }, [navigate]);
+    }, [navigate, location.pathname]);
 
     React.useEffect(() => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
