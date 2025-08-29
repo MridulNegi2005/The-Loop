@@ -31,6 +31,10 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /\/assets\//]
+      },
     }),
   ],
   define: {
