@@ -247,6 +247,7 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
         <header className="bg-white dark:bg-[#161b22]/80 backdrop-blur-sm border-b border-gray-200 dark:border-purple-700/50 sticky top-0 z-20">
             <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
+                  <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-8 h-8 sm:w-10 sm:h-10 mr-2" style={{ background: 'transparent' }} />
                   <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-400 transition-colors">The Loop</button>
                   {showPwaButton && (
                     <button
@@ -521,6 +522,9 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
     return (
         <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
             <div className="w-full max-w-md">
+                <div className="flex justify-center mb-6">
+                  <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
+                </div>
                 <form onSubmit={handleSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
                     <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Welcome Back!</h2>
                     {error && <p className="bg-red-100 border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert">{error}</p>}
@@ -579,6 +583,9 @@ const SignupPage = ({ setPage }) => {
     return ( 
         <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
             <div className="w-full max-w-md">
+                <div className="flex justify-center mb-6">
+                  <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
+                </div>
                 <form onSubmit={handleSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
                     <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Create Your Account</h2>
                     {error && <p className="bg-red-100 border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert">{error}</p>}
@@ -801,10 +808,10 @@ export default function App() {
                 {showSplash ? (
                     <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d1117] text-white animate-fadeIn">
                         <img
-                          src="/icon-192x192.png"
-                          alt="The Loop App Icon"
+                          src="/logo_transparent-192x192.PNG"
+                          alt="The Loop Logo"
                           className="w-20 h-20 mb-6 animate-bounce rounded-2xl shadow-lg"
-                          style={{ background: '#fff' }}
+                          style={{ background: 'transparent' }}
                         />
                         <span className="text-3xl font-bold tracking-tight">The Loop</span>
                     </div>
@@ -827,7 +834,10 @@ export default function App() {
                             />
                         } />
                         <Route path="/events/:id" element={<EventDetailsRoute />} />
-                        <Route path="*" element={<div className="text-center py-10 text-gray-500">Page not found.</div>} />
+                                                <Route path="*" element={<div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                                                    <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16 mb-6" style={{ background: 'transparent' }} />
+                                                    <div>Page not found.</div>
+                                                </div>} />
                     </Routes>
                 )}
             </div>
