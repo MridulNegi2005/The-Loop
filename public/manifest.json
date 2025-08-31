@@ -28,11 +28,25 @@
   "icons": [{ "src": "/logo_transparent-192x192.PNG", "sizes": "192x192" }]
     },
     {
-      "name": "My Feed",
-      "short_name": "Feed",
-      "description": "Go to your personalized feed",
-      "url": "/feed",
-  "icons": [{ "src": "/logo_transparent-192x192.PNG", "sizes": "192x192" }]
+      "name": "The Loop",
+      "short_name": "Loop",
+      "start_url": ".",
+      "display": "standalone",
+      "background_color": "#0d1117",
+      "theme_color": "#a78bfa",
+      "description": "Find your vibe. Discover and join campus events.",
+      "version": "2",
+      "icons": [
+        {
+          "src": "icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "icon-512x512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ],
+      "orientation": "portrait"
     }
-  ]
-}

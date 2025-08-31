@@ -1,5 +1,3 @@
-// --- APP VERSION ---
-const APP_VERSION = '2';
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 
@@ -246,11 +244,11 @@ const Header = ({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewM
     }
 
     return (
-    <header className="bg-white dark:bg-[#161b22]/80 backdrop-blur-sm border-b border-gray-200 dark:border-purple-700/50 sticky top-0 z-20">
+        <header className="bg-white dark:bg-[#161b22]/80 backdrop-blur-sm border-b border-gray-200 dark:border-purple-700/50 sticky top-0 z-20">
             <nav className="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-8 h-8 sm:w-10 sm:h-10 mr-2" style={{ background: 'transparent' }} />
-                  <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-400 transition-colors">The Loop <span className="ml-2 text-xs font-semibold text-purple-500 align-top">v{APP_VERSION}</span></button>
+                  <button onClick={goHome} className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white hover:text-purple-400 transition-colors">The Loop</button>
                   {showPwaButton && (
                     <button
                       onClick={handlePwaInstall}
@@ -382,175 +380,21 @@ const VenueScroller = ({ venue, events, setSelectedEvent }) => {
     );
 };
 
-// --- VERTICAL TIMELINE + 2x2 GRID EVENT LIST ---
 const EventList = ({ events, setSelectedEvent }) => {
-    // Group events by date (YYYY-MM-DD)
-    const eventsByDate = events.reduce((acc, event) => {
-        const dateKey = new Date(event.start_at).toISOString().slice(0, 10);
-        if (!acc[dateKey]) acc[dateKey] = [];
-        acc[dateKey].push(event);
+    const eventsByVenue = events.reduce((acc, event) => {
+        const venue = event.venue || 'Unknown Venue';
+        if (!acc[venue]) {
+            acc[venue] = [];
+        }
+        acc[venue].push(event);
         return acc;
     }, {});
-    const sortedDates = Object.keys(eventsByDate).sort();
-    const [selectedDate, setSelectedDate] = React.useState(sortedDates[0] || null);
-    const sectionRefs = React.useRef({});
-    const gridContainerRef = React.useRef(null);
-    // timelineListRef declared below, only declare once
-    const [activeIndex, setActiveIndex] = React.useState(0);
-    const [dotsVisible, setDotsVisible] = React.useState(7);
-    const timelineListRef = React.useRef(null);
 
-    // Dynamically set number of visible dots based on available vertical space (parent container)
-    React.useEffect(() => {
-        function updateDotsVisible() {
-            // Find the parent container height (aside > div)
-            let container = null;
-            if (timelineListRef.current) {
-                container = timelineListRef.current.closest('aside') || timelineListRef.current.parentElement;
-            }
-            const minDotHeight = 56;
-            let maxDots = 7;
-            if (container) {
-                const height = container.clientHeight || window.innerHeight * 0.7;
-                maxDots = Math.max(3, Math.floor(height / minDotHeight));
-            } else {
-                // Fallback to screen size
-                if (window.innerWidth < 640) maxDots = 5;
-                else if (window.innerWidth < 1024) maxDots = 7;
-                else maxDots = 9;
-            }
-            setDotsVisible(maxDots);
-        }
-        updateDotsVisible();
-        window.addEventListener('resize', updateDotsVisible);
-        return () => window.removeEventListener('resize', updateDotsVisible);
-    }, []);
-
-    // --- Scroll sync: update selectedDate and activeIndex as user scrolls ---
-    React.useEffect(() => {
-        const observer = new window.IntersectionObserver(
-            (entries) => {
-                // Find the topmost visible section
-                const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-                if (visible.length > 0) {
-                    const date = visible[0].target.getAttribute('data-date');
-                    const idx = sortedDates.indexOf(date);
-                    if (date && date !== selectedDate) setSelectedDate(date);
-                    if (idx !== -1 && idx !== activeIndex) setActiveIndex(idx);
-                }
-            },
-            { root: gridContainerRef.current, threshold: 0.5 }
-        );
-        sortedDates.forEach(date => {
-            if (sectionRefs.current[date]) observer.observe(sectionRefs.current[date]);
-        });
-        return () => observer.disconnect();
-    }, [sortedDates]);
-
-    // --- Scroll timeline to keep active dot centered, smoothly ---
-    React.useEffect(() => {
-        if (!timelineListRef.current) return;
-        const container = timelineListRef.current;
-        // Ensure smooth scroll behavior
-        container.style.scrollBehavior = 'smooth';
-        const activeDot = container.querySelector('.timeline-dot-active');
-        if (activeDot) {
-            const containerRect = container.getBoundingClientRect();
-            const dotRect = activeDot.getBoundingClientRect();
-            // Center the active dot in the visible area
-            const scrollTop = container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2;
-            // Only scroll if not already centered (avoid jitter)
-            if (Math.abs(container.scrollTop - scrollTop) > 2) {
-                container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-            }
-        }
-    }, [activeIndex]);
-
-    // --- Scroll to section when timeline dot is clicked ---
-    const handleTimelineClick = (date, idx) => {
-        setSelectedDate(date);
-        setActiveIndex(idx);
-        const section = sectionRefs.current[date];
-        if (section && gridContainerRef.current) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    };
-
-    // --- Timeline rendering ---
     return (
-        <div className="flex flex-col md:flex-row gap-8 mt-8">
-            {/* Timeline (Left) */}
-            <aside className="md:w-1/4 flex-shrink-0 flex md:block justify-center">
-                <div className="relative flex md:block md:h-full md:min-h-[400px]">
-                    {/* Vertical line */}
-                    <div className="hidden md:block absolute left-1/2 top-0 h-full w-1 bg-gradient-to-b from-purple-400/60 to-purple-900/30 rounded-full" style={{ transform: 'translateX(-50%)' }} />
-                    <div
-                        ref={timelineListRef}
-                        className="flex md:flex-col items-center md:items-stretch w-full md:w-auto z-10 md:max-h-[70vh] md:overflow-y-auto no-scrollbar relative"
-                        style={{ position: 'relative', minHeight: 200, height: '100%' }}
-                    >
-                        {/* Timeline dots and moving indicator */}
-                        {sortedDates.map((date, idx) => {
-                            // Show as many as fit: current, N above, N below (N depends on available space)
-                            const half = Math.floor(dotsVisible / 2);
-                            let isVisible = true;
-                            if (sortedDates.length > dotsVisible && Math.abs(idx - activeIndex) > half) isVisible = false;
-                            return isVisible ? (
-                                <div key={date} className="flex flex-col items-center">
-                                    <button
-                                        className={`timeline-dot ${activeIndex === idx ? 'timeline-dot-active' : ''} flex flex-col items-center justify-center mb-0 md:mb-0 transition-all duration-200`}
-                                        onClick={() => handleTimelineClick(date, idx)}
-                                        style={{ zIndex: 2, background: 'none', border: 'none', outline: 'none', cursor: 'pointer', position: 'relative' }}
-                                    >
-                                        {/* Outlined circle for all, glowing filled for active, with date inside */}
-                                        <span
-                                            className={`w-10 h-10 flex items-center justify-center rounded-full border-2 text-xs font-bold select-none ${activeIndex === idx ? 'border-purple-500 bg-purple-700 text-white shadow-lg shadow-purple-400/60 animate-pulse' : 'border-purple-400 bg-white dark:bg-[#161b22] text-purple-700 dark:text-purple-200'}`}
-                                            style={{
-                                                boxShadow: activeIndex === idx ? '0 0 0 4px #a78bfa55' : 'none',
-                                                transition: 'box-shadow 0.2s, background 0.2s',
-                                            }}
-                                        >
-                                            {formatDate(date, { month: 'short', day: 'numeric' })}
-                                        </span>
-                                    </button>
-                                    {/* Spacer/gap between dots, except after last */}
-                                    {idx < sortedDates.length - 1 && (
-                                        <div style={{ height: 40 }} className="hidden md:block w-1 mx-auto bg-transparent" />
-                                    )}
-                                </div>
-                            ) : null;
-                        })}
-                        {/* Moving indicator (dot) between dates as you scroll */}
-                        {/* Optionally, you can add a vertical bar with a moving thumb here for more animation */}
-                    </div>
-                </div>
-            </aside>
-
-            {/* Events Grid (Right) - scrollable, syncs with timeline, no visible scrollbar */}
-            <section className="flex-1 max-h-[70vh] overflow-y-auto no-scrollbar" ref={gridContainerRef} id="event-grid">
-                {sortedDates.map(date => (
-                    <div
-                        key={date}
-                        data-date={date}
-                        ref={el => (sectionRefs.current[date] = el)}
-                        className="mb-12"
-                    >
-                        <div className={`bg-white dark:bg-[#161b22] rounded-2xl border border-gray-200 dark:border-purple-800/50 shadow-lg p-6 md:p-10 ${selectedDate === date ? '' : 'opacity-80'}`}>
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                                <span className="inline-block w-3 h-3 rounded-full bg-purple-500" />
-                                {formatDate(date, { weekday: 'long', month: 'long', day: 'numeric' })}
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                {eventsByDate[date].map(event => (
-                                    <div key={event.id} className="h-full">
-                                        <EventCard event={event} onSelect={() => setSelectedEvent(event)} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </section>
+        <div className="space-y-12 mt-8">
+            {Object.entries(eventsByVenue).map(([venue, venueEvents]) => (
+                <VenueScroller key={venue} venue={venue} events={venueEvents} setSelectedEvent={setSelectedEvent} />
+            ))}
         </div>
     );
 };
