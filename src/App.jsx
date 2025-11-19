@@ -405,6 +405,34 @@ const EventList = ({ events, setSelectedEvent }) => {
     const [dotsVisible, setDotsVisible] = React.useState(7);
     const timelineListRef = React.useRef(null);
 
+    // Shared scroll animation utilities so timeline + events grid use identical timing/easing
+    const SCROLL_DURATION = 700; // ms - adjust to taste
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+    const animateScroll = (container, targetScrollTop, duration = SCROLL_DURATION) => {
+        if (!container) return Promise.resolve();
+        const start = container.scrollTop;
+        const change = targetScrollTop - start;
+        if (change === 0) return Promise.resolve();
+        let startTime = null;
+        return new Promise((resolve) => {
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const t = Math.min(1, elapsed / duration);
+                const eased = easeOutCubic(t);
+                container.scrollTop = Math.round(start + change * eased);
+                if (elapsed < duration) {
+                    requestAnimationFrame(step);
+                } else {
+                    // ensure final position
+                    container.scrollTop = targetScrollTop;
+                    resolve();
+                }
+            };
+            requestAnimationFrame(step);
+        });
+    };
+
     // Dynamically set number of visible dots based on available vertical space (parent container)
     React.useEffect(() => {
         function updateDotsVisible() {
@@ -468,20 +496,14 @@ const EventList = ({ events, setSelectedEvent }) => {
     React.useEffect(() => {
         if (!timelineListRef.current) return;
         const container = timelineListRef.current;
-        // Smoothly bring the active dot to center for a natural feel
         const activeDot = container.querySelector('.timeline-dot-active');
-        if (activeDot && typeof activeDot.scrollIntoView === 'function') {
-            // Use scrollIntoView with block:center for smoother behavior across browsers
-            try {
-                activeDot.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } catch (e) {
-                // fallback: compute and set scrollTop
-                const containerRect = container.getBoundingClientRect();
-                const dotRect = activeDot.getBoundingClientRect();
-                const scrollTop = container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2;
-                if (Math.abs(container.scrollTop - scrollTop) > 2) container.scrollTo({ top: scrollTop, behavior: 'smooth' });
-            }
-        }
+        if (!activeDot) return;
+        // compute target top to center the dot inside the timeline container
+        const containerRect = container.getBoundingClientRect();
+        const dotRect = activeDot.getBoundingClientRect();
+        const target = Math.round(container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2);
+        // animate using the shared animateScroll so timing/easing matches grid
+        animateScroll(container, target, SCROLL_DURATION);
     }, [activeIndex]);
 
     // Prevent the whole page from scrolling when on events routes — keep scrolling confined
@@ -497,7 +519,7 @@ const EventList = ({ events, setSelectedEvent }) => {
     }, [location.pathname]);
 
     // --- Scroll to section when timeline dot is clicked ---
-    const handleTimelineClick = (date, idx) => {
+    const handleTimelineClick = async (date, idx) => {
         // Set lock so the IntersectionObserver doesn't fight the programmatic scroll
         isManualScrollRef.current = true;
         if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
@@ -505,12 +527,33 @@ const EventList = ({ events, setSelectedEvent }) => {
         manualScrollTimeoutRef.current = setTimeout(() => {
             isManualScrollRef.current = false;
             manualScrollTimeoutRef.current = null;
-        }, 900);
+        }, SCROLL_DURATION + 120);
         setSelectedDate(date);
         setActiveIndex(idx);
         const section = sectionRefs.current[date];
-        if (section && gridContainerRef.current) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const grid = gridContainerRef.current;
+        const timeline = timelineListRef.current;
+        const promises = [];
+        if (section && grid) {
+            const gridRect = grid.getBoundingClientRect();
+            const secRect = section.getBoundingClientRect();
+            const targetGrid = Math.round(grid.scrollTop + (secRect.top - gridRect.top));
+            promises.push(animateScroll(grid, targetGrid, SCROLL_DURATION));
+        }
+        if (timeline) {
+            const containerRect = timeline.getBoundingClientRect();
+            // find the button for this date
+            const dotEl = timeline.querySelectorAll('.timeline-dot')[idx];
+            if (dotEl) {
+                const dotRect = dotEl.getBoundingClientRect();
+                const targetTimeline = Math.round(timeline.scrollTop + (dotRect.top - containerRect.top) - timeline.clientHeight / 2 + dotRect.height / 2);
+                promises.push(animateScroll(timeline, targetTimeline, SCROLL_DURATION));
+            }
+        }
+        try {
+            await Promise.all(promises);
+        } catch (e) {
+            // ignore animation errors
         }
     };
 
