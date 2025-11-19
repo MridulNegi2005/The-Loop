@@ -403,6 +403,7 @@ const EventList = ({ events, setSelectedEvent }) => {
     const [selectedDate, setSelectedDate] = React.useState(sortedDates[0] || null);
     const sectionRefs = React.useRef({});
     const gridContainerRef = React.useRef(null);
+    const mobileTimelineRef = React.useRef(null);
     // When user clicks a timeline dot we programmatically scroll the grid.
     // Use a lock to prevent the IntersectionObserver from reacting during that smooth scroll
     // (prevents click vs scroll race which causes jitter).
@@ -428,7 +429,8 @@ const EventList = ({ events, setSelectedEvent }) => {
                 const elapsed = timestamp - startTime;
                 const t = Math.min(1, elapsed / duration);
                 const eased = easeOutCubic(t);
-                container.scrollTop = Math.round(start + change * eased);
+                // Allow fractional scroll positions for smoother animation (avoid rounding)
+                container.scrollTop = start + change * eased;
                 if (elapsed < duration) {
                     requestAnimationFrame(step);
                 } else {
@@ -436,6 +438,28 @@ const EventList = ({ events, setSelectedEvent }) => {
                     container.scrollTop = targetScrollTop;
                     resolve();
                 }
+            };
+            requestAnimationFrame(step);
+        });
+    };
+
+    // horizontal animate for mobile timeline
+    const animateScrollX = (container, targetScrollLeft, duration = SCROLL_DURATION) => {
+        if (!container) return Promise.resolve();
+        const start = container.scrollLeft;
+        const change = targetScrollLeft - start;
+        if (change === 0) return Promise.resolve();
+        let startTime = null;
+        return new Promise((resolve) => {
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const t = Math.min(1, elapsed / duration);
+                const eased = easeOutCubic(t);
+                // Use fractional values for smoother motion
+                container.scrollLeft = start + change * eased;
+                if (elapsed < duration) requestAnimationFrame(step);
+                else { container.scrollLeft = targetScrollLeft; resolve(); }
             };
             requestAnimationFrame(step);
         });
@@ -501,17 +525,29 @@ const EventList = ({ events, setSelectedEvent }) => {
     }, []);
 
     // --- Scroll timeline to keep active dot centered, smoothly ---
+    // Center active dot in the timeline — handle both desktop (vertical) and mobile (horizontal)
     React.useEffect(() => {
-        if (!timelineListRef.current) return;
-        const container = timelineListRef.current;
-        const activeDot = container.querySelector('.timeline-dot-active');
-        if (!activeDot) return;
-        // compute target top to center the dot inside the timeline container
-        const containerRect = container.getBoundingClientRect();
-        const dotRect = activeDot.getBoundingClientRect();
-        const target = Math.round(container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2);
-        // animate using the shared animateScroll so timing/easing matches grid
-        animateScroll(container, target, SCROLL_DURATION);
+        // Desktop vertical centering
+        if (timelineListRef.current && window.innerWidth >= 768) {
+            const container = timelineListRef.current;
+            const activeDot = container.querySelector('.timeline-dot-active');
+            if (activeDot) {
+                const containerRect = container.getBoundingClientRect();
+                const dotRect = activeDot.getBoundingClientRect();
+                const target = Math.round(container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2);
+                animateScroll(container, target, SCROLL_DURATION);
+            }
+        }
+        // Mobile horizontal centering
+        if (mobileTimelineRef.current && window.innerWidth < 768) {
+            const mcont = mobileTimelineRef.current;
+            const dots = mcont.querySelectorAll('button');
+            const active = dots[activeIndex];
+            if (active) {
+                const targetLeft = Math.round(active.offsetLeft - (mcont.clientWidth / 2) + (active.clientWidth / 2));
+                animateScrollX(mcont, targetLeft, SCROLL_DURATION);
+            }
+        }
     }, [activeIndex]);
 
     // Prevent the whole page from scrolling when on events routes — keep scrolling confined
@@ -548,7 +584,7 @@ const EventList = ({ events, setSelectedEvent }) => {
             const targetGrid = Math.round(grid.scrollTop + (secRect.top - gridRect.top));
             promises.push(animateScroll(grid, targetGrid, SCROLL_DURATION));
         }
-        if (timeline) {
+        if (timeline && window.innerWidth >= 768) {
             const containerRect = timeline.getBoundingClientRect();
             // find the button for this date
             const dotEl = timeline.querySelectorAll('.timeline-dot')[idx];
@@ -556,6 +592,15 @@ const EventList = ({ events, setSelectedEvent }) => {
                 const dotRect = dotEl.getBoundingClientRect();
                 const targetTimeline = Math.round(timeline.scrollTop + (dotRect.top - containerRect.top) - timeline.clientHeight / 2 + dotRect.height / 2);
                 promises.push(animateScroll(timeline, targetTimeline, SCROLL_DURATION));
+            }
+        }
+        // also animate the mobile timeline horizontally when on small screens
+        if (mobileTimelineRef.current && window.innerWidth < 768) {
+            const mcont = mobileTimelineRef.current;
+            const dotEl = mcont.querySelectorAll('button')[idx];
+            if (dotEl) {
+                const targetLeft = Math.round(dotEl.offsetLeft - (mcont.clientWidth / 2) + (dotEl.clientWidth / 2));
+                promises.push(animateScrollX(mcont, targetLeft, SCROLL_DURATION));
             }
         }
         try {
@@ -568,8 +613,34 @@ const EventList = ({ events, setSelectedEvent }) => {
     // --- Timeline rendering ---
     return (
         <div className="flex flex-col md:flex-row gap-8 mt-8">
+            {/* Mobile Timeline (top) - only on small screens */}
+            <div className="block md:hidden w-full">
+                <div className="relative">
+                    <div className="mobile-line" />
+                    <div ref={mobileTimelineRef} className="mobile-timeline flex items-center gap-8 overflow-x-auto no-scrollbar snap-x snap-mandatory px-4 py-3" style={{ touchAction: 'pan-x', overscrollBehavior: 'contain' }}>
+                        {sortedDates.map((date, idx) => {
+                            const distance = Math.abs(idx - activeIndex);
+                            const opacity = activeIndex === idx ? 1 : Math.max(0.12, 1 - distance * 0.28);
+                            const scale = activeIndex === idx ? 1 : 1 - Math.min(distance * 0.03, 0.12);
+                            const mobileBtnStyle = {
+                                opacity,
+                                transform: `scale(${scale})`,
+                                transition: 'transform 0.28s cubic-bezier(.2,.9,.2,1), opacity 0.28s ease'
+                            };
+                            return (
+                                <button key={date} className={`timeline-dot ${activeIndex === idx ? 'timeline-dot-active' : ''} flex-shrink-0 snap-center`} onClick={() => handleTimelineClick(date, idx)} style={mobileBtnStyle}>
+                                    <span className={`mobile-dot w-14 h-10 flex items-center justify-center rounded-full border-2 text-sm select-none ${activeIndex === idx ? 'border-purple-500 bg-purple-700 text-white shadow-lg shadow-purple-400/60' : 'border-purple-400 bg-white dark:bg-[#161b22] text-purple-700 dark:text-purple-200'}`}>
+                                        {formatDate(date, { month: 'short', day: 'numeric' })}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
             {/* Timeline (Left) */}
-            <aside className="md:w-1/4 flex-shrink-0 flex md:block justify-center">
+            <aside className="hidden md:flex md:w-1/4 flex-shrink-0 justify-center">
                 <div className="relative flex md:block md:h-full md:min-h-[400px]">
                     {/* Vertical line */}
                     <div className="hidden md:block absolute left-1/2 top-0 h-full w-1 bg-gradient-to-b from-purple-400/60 to-purple-900/30 rounded-full" style={{ transform: 'translateX(-50%)' }} />
@@ -1048,6 +1119,23 @@ export default function App() {
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 .animate-fadeIn { animation: fadeIn 0.7s; }
+                /* Mobile timeline tweaks */
+                .mobile-timeline { position: relative; }
+                .mobile-timeline .mobile-line { position: absolute; left: 1rem; right: 1rem; top: 50%; transform: translateY(-50%); height: 4px; border-radius: 9999px; background: linear-gradient(90deg, rgba(167,139,250,0.15), rgba(99,102,241,0.3)); pointer-events: none; }
+                .mobile-timeline .mobile-dot { display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; font-weight: 700; }
+                .mobile-timeline { -webkit-overflow-scrolling: touch; touch-action: pan-x; overscroll-behavior: contain; }
+                /* Responsive sizing for dots */
+                @media (max-width: 420px) {
+                    .mobile-timeline .mobile-dot { width: 64px; height: 36px; font-size: 12px; }
+                    .mobile-timeline { gap: 0.75rem; padding-left: 0.75rem; padding-right: 0.75rem; }
+                }
+                @media (min-width: 421px) and (max-width: 767px) {
+                    .mobile-timeline .mobile-dot { width: 78px; height: 42px; font-size: 14px; }
+                    .mobile-timeline { gap: 1.25rem; padding-left: 1rem; padding-right: 1rem; }
+                }
+                @media (min-width: 768px) {
+                    .mobile-timeline .mobile-dot { width: auto; height: auto; }
+                }
             `}</style>
             {location.pathname !== '/' && !showSplash && (
                 <Header
