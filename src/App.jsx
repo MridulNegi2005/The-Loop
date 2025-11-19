@@ -168,10 +168,18 @@ const MapView = ({ events, setSelectedEvent, theme }) => {
                 // InfoWindow content: add data-lat/lng for mobile tap
                 const now = new Date();
                 const upcomingEvents = locationEvents.filter(e => new Date(e.start_at) > now).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
-                const eventsToShow = upcomingEvents.slice(0, 3);
-                const hasMoreEvents = upcomingEvents.length > 3;
-                // Add data-lat/lng for mobile tap
-                const contentString = `<div style="background-color: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px; position: relative;" class="map-hoverbox" data-lat="${firstEvent.lat}" data-lng="${firstEvent.lng}"><button onclick="window.closeInfoWindow()" style="position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #a5b4fc; font-size: 28px; line-height: 1; cursor: pointer; transition: color 0.2s;">&times;</button><h2 style="font-weight: bold; font-size: 18px; color: #a78bfa; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #4338ca;">${firstEvent.venue}</h2>${eventsToShow.length > 0 ? eventsToShow.map(event => `<div style="cursor: pointer; padding: 8px 0; border-bottom: ${eventsToShow.length > 1 && eventsToShow.indexOf(event) !== eventsToShow.length - 1 ? '1px solid #312e81' : 'none'};" onclick="window.selectEventFromMap('${event.id}')"><h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #c7d2fe;">${event.title}</h3><p style="margin: 0; color: #a5b4fc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p></div>`).join('') : '<p style="margin: 0; color: #a5b4fc; font-size: 14px; text-align: center;">No upcoming events here.</p>'}${hasMoreEvents ? '<p style="text-align: center; margin-top: 8px; color: #818cf8; font-size: 12px;">...and more</p>' : ''}</div>`;
+                // Prefer upcoming events, but fall back to any events at this location (past or future)
+                let eventsToShow = upcomingEvents.slice(0, 3);
+                let usingUpcoming = true;
+                if (eventsToShow.length === 0) {
+                    usingUpcoming = false;
+                    // show the nearest events (sorted by start date) even if past
+                    eventsToShow = locationEvents.slice().sort((a, b) => new Date(a.start_at) - new Date(b.start_at)).slice(0, 3);
+                }
+                const hasMoreEvents = usingUpcoming ? upcomingEvents.length > 3 : locationEvents.length > 3;
+                // Add data-lat/lng for mobile tap. If usingUpcoming is false, label generically as "Events".
+                const subtitle = usingUpcoming ? '' : '<p style="margin:0 0 8px 0; color:#a5b4fc; font-size:13px;">Showing recent events</p>';
+                const contentString = `<div style="background-color: #1e1b4b; color: #e0e7ff; border-radius: 8px; padding: 12px; font-family: sans-serif; max-width: 250px; position: relative;" class="map-hoverbox" data-lat="${firstEvent.lat}" data-lng="${firstEvent.lng}"><button onclick="window.closeInfoWindow()" style="position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #a5b4fc; font-size: 28px; line-height: 1; cursor: pointer; transition: color 0.2s;">&times;</button><h2 style="font-weight: bold; font-size: 18px; color: #a78bfa; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #4338ca;">${firstEvent.venue}</h2>${subtitle}${eventsToShow.length > 0 ? eventsToShow.map(event => `<div style="cursor: pointer; padding: 8px 0; border-bottom: ${eventsToShow.length > 1 && eventsToShow.indexOf(event) !== eventsToShow.length - 1 ? '1px solid #312e81' : 'none'};" onclick="window.selectEventFromMap('${event.id}')"><h3 style="font-weight: bold; margin: 0 0 4px 0; font-size: 16px; color: #c7d2fe;">${event.title}</h3><p style="margin: 0; color: #a5b4fc; font-size: 14px;">${formatDate(event.start_at)} at ${formatTime(event.start_at)}</p></div>`).join('') : '<p style="margin: 0; color: #a5b4fc; font-size: 14px; text-align: center;">No events found.</p>'}${hasMoreEvents ? '<p style="text-align: center; margin-top: 8px; color: #818cf8; font-size: 12px;">...and more</p>' : ''}</div>`;
 
                 // Desktop: show on hover
                 marker.addListener('mouseover', () => {
