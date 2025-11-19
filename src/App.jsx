@@ -395,6 +395,11 @@ const EventList = ({ events, setSelectedEvent }) => {
     const [selectedDate, setSelectedDate] = React.useState(sortedDates[0] || null);
     const sectionRefs = React.useRef({});
     const gridContainerRef = React.useRef(null);
+    // When user clicks a timeline dot we programmatically scroll the grid.
+    // Use a lock to prevent the IntersectionObserver from reacting during that smooth scroll
+    // (prevents click vs scroll race which causes jitter).
+    const isManualScrollRef = React.useRef(false);
+    const manualScrollTimeoutRef = React.useRef(null);
     // timelineListRef declared below, only declare once
     const [activeIndex, setActiveIndex] = React.useState(0);
     const [dotsVisible, setDotsVisible] = React.useState(7);
@@ -430,6 +435,8 @@ const EventList = ({ events, setSelectedEvent }) => {
     React.useEffect(() => {
         const observer = new window.IntersectionObserver(
             (entries) => {
+                // If a manual (click-triggered) scroll is in progress, ignore observer updates
+                if (isManualScrollRef.current) return;
                 // Find the topmost visible section
                 const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
                 if (visible.length > 0) {
@@ -447,27 +454,58 @@ const EventList = ({ events, setSelectedEvent }) => {
         return () => observer.disconnect();
     }, [sortedDates]);
 
+    // Clear any pending manual-scroll timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (manualScrollTimeoutRef.current) {
+                clearTimeout(manualScrollTimeoutRef.current);
+                manualScrollTimeoutRef.current = null;
+            }
+        };
+    }, []);
+
     // --- Scroll timeline to keep active dot centered, smoothly ---
     React.useEffect(() => {
         if (!timelineListRef.current) return;
         const container = timelineListRef.current;
-        // Ensure smooth scroll behavior
-        container.style.scrollBehavior = 'smooth';
+        // Smoothly bring the active dot to center for a natural feel
         const activeDot = container.querySelector('.timeline-dot-active');
-        if (activeDot) {
-            const containerRect = container.getBoundingClientRect();
-            const dotRect = activeDot.getBoundingClientRect();
-            // Center the active dot in the visible area
-            const scrollTop = container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2;
-            // Only scroll if not already centered (avoid jitter)
-            if (Math.abs(container.scrollTop - scrollTop) > 2) {
-                container.scrollTo({ top: scrollTop, behavior: 'smooth' });
+        if (activeDot && typeof activeDot.scrollIntoView === 'function') {
+            // Use scrollIntoView with block:center for smoother behavior across browsers
+            try {
+                activeDot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } catch (e) {
+                // fallback: compute and set scrollTop
+                const containerRect = container.getBoundingClientRect();
+                const dotRect = activeDot.getBoundingClientRect();
+                const scrollTop = container.scrollTop + (dotRect.top - containerRect.top) - container.clientHeight / 2 + dotRect.height / 2;
+                if (Math.abs(container.scrollTop - scrollTop) > 2) container.scrollTo({ top: scrollTop, behavior: 'smooth' });
             }
         }
     }, [activeIndex]);
 
+    // Prevent the whole page from scrolling when on events routes — keep scrolling confined
+    // to the timeline and grid containers. This mirrors an app-like layout where content panes
+    // scroll independently.
+    React.useEffect(() => {
+        if (location && location.pathname && location.pathname.startsWith('/events')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [location.pathname]);
+
     // --- Scroll to section when timeline dot is clicked ---
     const handleTimelineClick = (date, idx) => {
+        // Set lock so the IntersectionObserver doesn't fight the programmatic scroll
+        isManualScrollRef.current = true;
+        if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
+        // Unlock after a short delay (covers the smooth scroll duration)
+        manualScrollTimeoutRef.current = setTimeout(() => {
+            isManualScrollRef.current = false;
+            manualScrollTimeoutRef.current = null;
+        }, 900);
         setSelectedDate(date);
         setActiveIndex(idx);
         const section = sectionRefs.current[date];
@@ -491,24 +529,35 @@ const EventList = ({ events, setSelectedEvent }) => {
                     >
                         {/* Timeline dots and moving indicator */}
                         {sortedDates.map((date, idx) => {
-                            // Show as many as fit: current, N above, N below (N depends on available space)
+                            // Always render dots so the column fills available space — compute smooth
+                            // opacity/scale based on distance from active index for a softer focus.
                             const half = Math.floor(dotsVisible / 2);
-                            let isVisible = true;
-                            if (sortedDates.length > dotsVisible && Math.abs(idx - activeIndex) > half) isVisible = false;
-                            return isVisible ? (
+                            const distance = Math.abs(idx - activeIndex);
+                            // Opacity falls off quickly for nearby dots, then more slowly for far ones
+                            const opacity = activeIndex === idx ? 1 : Math.max(0.12, 1 - distance * 0.28);
+                            // Slight scale reduction for distant dots
+                            const scale = activeIndex === idx ? 1 : 1 - Math.min(distance * 0.03, 0.12);
+                            const btnStyle = {
+                                zIndex: 2,
+                                background: 'none',
+                                border: 'none',
+                                outline: 'none',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                opacity,
+                                transform: `scale(${scale})`,
+                                transition: 'transform 0.28s cubic-bezier(.2,.9,.2,1), opacity 0.28s ease'
+                            };
+                            return (
                                 <div key={date} className="flex flex-col items-center">
                                     <button
-                                        className={`timeline-dot ${activeIndex === idx ? 'timeline-dot-active' : ''} flex flex-col items-center justify-center mb-0 md:mb-0 transition-all duration-200`}
+                                        className={`timeline-dot ${activeIndex === idx ? 'timeline-dot-active' : ''} flex flex-col items-center justify-center mb-0 md:mb-0`}
                                         onClick={() => handleTimelineClick(date, idx)}
-                                        style={{ zIndex: 2, background: 'none', border: 'none', outline: 'none', cursor: 'pointer', position: 'relative' }}
+                                        style={btnStyle}
                                     >
-                                        {/* Outlined circle for all, glowing filled for active, with date inside */}
                                         <span
                                             className={`w-10 h-10 flex items-center justify-center rounded-full border-2 text-xs font-bold select-none ${activeIndex === idx ? 'border-purple-500 bg-purple-700 text-white shadow-lg shadow-purple-400/60 animate-pulse' : 'border-purple-400 bg-white dark:bg-[#161b22] text-purple-700 dark:text-purple-200'}`}
-                                            style={{
-                                                boxShadow: activeIndex === idx ? '0 0 0 4px #a78bfa55' : 'none',
-                                                transition: 'box-shadow 0.2s, background 0.2s',
-                                            }}
+                                            style={{ boxShadow: activeIndex === idx ? '0 0 0 4px #a78bfa55' : 'none', transition: 'box-shadow 0.2s' }}
                                         >
                                             {formatDate(date, { month: 'short', day: 'numeric' })}
                                         </span>
@@ -518,7 +567,7 @@ const EventList = ({ events, setSelectedEvent }) => {
                                         <div style={{ height: 40 }} className="hidden md:block w-1 mx-auto bg-transparent" />
                                     )}
                                 </div>
-                            ) : null;
+                            );
                         })}
                         {/* Moving indicator (dot) between dates as you scroll */}
                         {/* Optionally, you can add a vertical bar with a moving thumb here for more animation */}
