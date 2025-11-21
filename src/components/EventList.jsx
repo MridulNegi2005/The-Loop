@@ -20,6 +20,8 @@ export default function EventList({ events, setSelectedEvent }) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [dotsVisible, setDotsVisible] = useState(7);
     const timelineListRef = useRef(null);
+    const dotRefs = useRef({});
+    const lastMousePos = useRef({ x: 0, y: 0 });
     const location = useLocation();
 
     const SCROLL_DURATION = 700;
@@ -147,6 +149,73 @@ export default function EventList({ events, setSelectedEvent }) {
         return () => { document.body.style.overflow = ''; };
     }, [location.pathname]);
 
+    useEffect(() => {
+        const container = timelineListRef.current;
+        if (!container || window.innerWidth < 768) return;
+
+        const handleGlow = () => {
+            const { x, y } = lastMousePos.current;
+            if (x === 0 && y === 0) return;
+
+            const dots = dotRefs.current;
+            Object.values(dots).forEach(dot => {
+                if (!dot) return;
+                const rect = dot.getBoundingClientRect();
+                const dotX = rect.left + rect.width / 2;
+                const dotY = rect.top + rect.height / 2;
+
+                const dist = Math.sqrt(Math.pow(x - dotX, 2) + Math.pow(y - dotY, 2));
+                const maxDist = 180;
+
+                const baseOpacity = parseFloat(dot.getAttribute('data-base-opacity') || '0.12');
+                const baseScale = parseFloat(dot.getAttribute('data-base-scale') || '0.88');
+
+                if (dist < maxDist) {
+                    const intensity = Math.pow(1 - (dist / maxDist), 2);
+                    const targetOpacity = 1;
+                    const targetScale = 1.15;
+
+                    const newOpacity = baseOpacity + (targetOpacity - baseOpacity) * intensity;
+                    const newScale = baseScale + (targetScale - baseScale) * intensity;
+
+                    dot.style.opacity = newOpacity;
+                    dot.style.transform = `scale(${newScale})`;
+                } else {
+                    dot.style.opacity = baseOpacity;
+                    dot.style.transform = `scale(${baseScale})`;
+                }
+            });
+        };
+
+        const onMouseMove = (e) => {
+            lastMousePos.current = { x: e.clientX, y: e.clientY };
+            requestAnimationFrame(handleGlow);
+        };
+
+        const onMouseLeave = () => {
+            lastMousePos.current = { x: 0, y: 0 };
+            Object.values(dotRefs.current).forEach(dot => {
+                if (!dot) return;
+                dot.style.opacity = dot.getAttribute('data-base-opacity');
+                dot.style.transform = `scale(${dot.getAttribute('data-base-scale')})`;
+            });
+        };
+
+        const onScroll = () => {
+            requestAnimationFrame(handleGlow);
+        };
+
+        container.addEventListener('mousemove', onMouseMove);
+        container.addEventListener('mouseleave', onMouseLeave);
+        container.addEventListener('scroll', onScroll);
+
+        return () => {
+            container.removeEventListener('mousemove', onMouseMove);
+            container.removeEventListener('mouseleave', onMouseLeave);
+            container.removeEventListener('scroll', onScroll);
+        };
+    }, [activeIndex, sortedDates]);
+
     const handleTimelineClick = async (date, idx) => {
         isManualScrollRef.current = true;
         if (manualScrollTimeoutRef.current) clearTimeout(manualScrollTimeoutRef.current);
@@ -243,6 +312,9 @@ export default function EventList({ events, setSelectedEvent }) {
                             return (
                                 <div key={date} className="flex flex-col items-center">
                                     <button
+                                        ref={el => { if (el) dotRefs.current[date] = el; else delete dotRefs.current[date]; }}
+                                        data-base-opacity={opacity}
+                                        data-base-scale={scale}
                                         className={`timeline-dot ${activeIndex === idx ? 'timeline-dot-active' : ''} flex flex-col items-center justify-center mb-0 md:mb-0`}
                                         onClick={() => handleTimelineClick(date, idx)}
                                         style={btnStyle}
