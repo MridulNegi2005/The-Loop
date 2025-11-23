@@ -1,30 +1,47 @@
-# main.py
-# --- Imports ---
-from fastapi import FastAPI, Depends, HTTPException, status
-from pydantic import BaseModel, EmailStr
-from typing import List
-from datetime import datetime, timedelta
-
-# Database Imports
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-
-# CORS Middleware
-from fastapi.middleware.cors import CORSMiddleware
-
-# Password Hashing & JWT
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 from passlib.context import CryptContext
 from jose import JWTError, jwt
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
 
-# --- Database Setup ---
-# Using SQLite for simplicity in this MVP.
-# The 'check_same_thread' argument is specific to SQLite.
-SQLALCHEMY_DATABASE_URL = "sqlite:///./event_aggregator.db"
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+load_dotenv()
+
+app = FastAPI()
+
+# CORS Configuration
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://the-loop-5snj.onrender.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World", "DB_URL": SQLALCHEMY_DATABASE_URL.split("@")[1] if "@" in SQLALCHEMY_DATABASE_URL else "SQLite"}
+
+# Database Setup
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+# Fallback or error handling could go here, but assuming env is set for now or using default
+if not SQLALCHEMY_DATABASE_URL:
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./event_aggregator.db"
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -37,6 +54,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "a_very_secret_key_that_should_be_in_an_env_file" # IMPORTANT: Change this and keep it secret
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 # --- Security Helper Functions ---
 def verify_password(plain_password, hashed_password):
@@ -61,7 +80,11 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=False)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
+    interests = Column(String, default="") # Comma-separated string of interests
 
 # Represents the 'events' table in the database.
 class Event(Base):
@@ -97,14 +120,24 @@ class EventSchema(BaseModel):
 # Defines the shape for creating a new user.
 class UserCreate(BaseModel):
     email: EmailStr
+    username: str
     password: str
 
 # Defines the shape of user data returned by the API.
 class UserSchema(BaseModel):
     id: int
     email: EmailStr
+    username: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    interests: Optional[str] = None
     class Config:
         orm_mode = True
+
+class UserUpdate(BaseModel):
+    interests: Optional[List[str]] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 # Defines the shape of the token response on successful login.
 class Token(BaseModel):
@@ -119,6 +152,24 @@ def get_db():
         yield db
     finally:
         db.close()
+
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+    return user
 
 # --- Database Seeding Function ---
 def seed_database():
@@ -228,8 +279,14 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
+    db_username = db.query(User).filter(User.username == user.username).first()
+    if db_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken",
+        )
     hashed_password = get_password_hash(user.password)
-    new_user = User(email=user.email, hashed_password=hashed_password)
+    new_user = User(email=user.email, username=user.username, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -252,9 +309,25 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
+@app.get("/users/me", response_model=UserSchema)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@app.put("/users/me", response_model=UserSchema)
+async def update_user_me(user_update: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user_update.interests is not None:
+        current_user.interests = ",".join(user_update.interests)
+    if user_update.first_name is not None:
+        current_user.first_name = user_update.first_name
+    if user_update.last_name is not None:
+        current_user.last_name = user_update.last_name
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
 # --- How to Run ---
 # 1. Make sure you have the required libraries:
-#    pip install fastapi uvicorn sqlalchemy pydantic passlib[bcrypt] python-jose[cryptography] python-multipart
+#    pip install fastapi uvicorn sqlalchemy pydantic passlib[bcrypt] python-jose[cryptography] python-multipart psycopg2-binary python-dotenv
 # 2. Save this file as main.py
 # 3. Run the server from your terminal:
 #    uvicorn main:app --reload

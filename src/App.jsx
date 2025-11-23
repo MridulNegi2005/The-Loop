@@ -6,29 +6,30 @@ import Header from './components/Header';
 import EventCard from './components/EventCard';
 import EventList from './components/EventList';
 import MapView from './components/MapView';
+import ProfilePage from './components/ProfilePage';
 import { formatDate, formatTime, addToCalendar, Tag } from './lib/utils';
 
 // --- MOCK DATA ---
 const mockEvents = [
-  { id: "evt_123", title: "Annual Tech Fest Kick-off", description: "Join us for the opening ceremony...", start_at: "2025-09-01T18:00:00Z", end_at: "2025-09-01T20:00:00Z", venue: "Main Auditorium", tags: ["productive", "tech", "fest"], lat: 30.3558, lng: 76.3625 },
-  { id: "evt_124", title: "Acoustic Night at the Cafe", description: "Unwind with some live music...", start_at: "2025-09-03T19:30:00Z", end_at: "2025-09-03T21:00:00Z", venue: "The Student Cafe", tags: ["chill", "music", "art"], lat: 30.3532, lng: 76.3651 },
-  { id: "evt_125", title: "Late Night Dance Party", description: "DJ Ron is back...", start_at: "2025-09-05T22:00:00Z", end_at: "2025-09-06T02:00:00Z", venue: "Gymnasium Hall", tags: ["wild", "dance", "late-night"], lat: 30.3571, lng: 76.3689 },
-  { id: "evt_126", title: "Python Workshop", description: "Learn the basics of Pandas...", start_at: "2025-09-06T14:00:00Z", end_at: "2025-09-06T16:00:00Z", venue: "Computer Lab 3", tags: ["productive", "workshop", "tech"], lat: 30.3545, lng: 76.3660 },
-  { id: "evt_127", title: "Freshers' Welcome Bash", description: "The official welcome party...", start_at: "2025-09-08T21:00:00Z", end_at: "2025-09-09T01:00:00Z", venue: "Main Auditorium", tags: ["wild", "dance", "late-night"], lat: 30.3558, lng: 76.3625 },
-  { id: "evt_128", title: "Guest Lecture: The Future of AI", description: "A talk by a leading researcher...", start_at: "2025-09-15T15:00:00Z", end_at: "2025-09-15T16:30:00Z", venue: "Main Auditorium", tags: ["productive", "tech"], lat: 30.3558, lng: 76.3625 },
-  { id: "evt_129", title: "Movie Marathon: Christopher Nolan", description: "A back-to-back screening...", start_at: "2025-09-20T18:00:00Z", end_at: "2025-09-20T23:00:00Z", venue: "Main Auditorium", tags: ["chill", "movie"], lat: 30.3558, lng: 76.3625 },
-  { id: "evt_130", title: "Open Mic Night", description: "Showcase your talent...", start_at: "2025-09-12T19:00:00Z", end_at: "2025-09-12T21:00:00Z", venue: "Tan Auditorium", tags: ["chill", "art", "music"], lat: 30.3565, lng: 76.3645 },
-  { id: "evt_131", title: "Debate Championship Finals", description: "Watch the best debaters...", start_at: "2025-09-19T16:00:00Z", end_at: "2025-09-19T18:00:00Z", venue: "Tan Auditorium", tags: ["productive"], lat: 30.3565, lng: 76.3645 },
-  { id: "evt_132", title: "Robotics Workshop", description: "A hands-on workshop...", start_at: "2025-09-13T10:00:00Z", end_at: "2025-09-13T13:00:00Z", venue: "COS", tags: ["productive", "tech", "workshop"], lat: 30.3540, lng: 76.3655 },
-  { id: "evt_133", title: "Science Exhibition", description: "Explore innovative projects...", start_at: "2025-09-22T11:00:00Z", end_at: "2025-09-22T17:00:00Z", venue: "COS", tags: ["productive", "tech", "art"], lat: 30.3540, lng: 76.3655 },
-  { id: "evt_134", title: "Food Carnival", description: "A paradise for foodies!", start_at: "2025-09-14T12:00:00Z", end_at: "2025-09-14T22:00:00Z", venue: "Fete Area", tags: ["chill", "wild"], lat: 30.3580, lng: 76.3695 },
-  { id: "evt_135", title: "Street Play Festival", description: "Experience powerful performances...", start_at: "2025-09-21T17:00:00Z", end_at: "2025-09-21T20:00:00Z", venue: "Fete Area", tags: ["art", "chill"], lat: 30.3580, lng: 76.3695 },
-  { id: "evt_136", title: "Kite Flying Competition", description: "Let your kites soar high...", start_at: "2025-09-28T14:00:00Z", end_at: "2025-09-28T17:00:00Z", venue: "Fete Area", tags: ["chill", "wild"], lat: 30.3580, lng: 76.3695 },
+    { id: "evt_123", title: "Annual Tech Fest Kick-off", description: "Join us for the opening ceremony...", start_at: "2025-09-01T18:00:00Z", end_at: "2025-09-01T20:00:00Z", venue: "Main Auditorium", tags: ["productive", "tech", "fest"], lat: 30.3558, lng: 76.3625 },
+    { id: "evt_124", title: "Acoustic Night at the Cafe", description: "Unwind with some live music...", start_at: "2025-09-03T19:30:00Z", end_at: "2025-09-03T21:00:00Z", venue: "The Student Cafe", tags: ["chill", "music", "art"], lat: 30.3532, lng: 76.3651 },
+    { id: "evt_125", title: "Late Night Dance Party", description: "DJ Ron is back...", start_at: "2025-09-05T22:00:00Z", end_at: "2025-09-06T02:00:00Z", venue: "Gymnasium Hall", tags: ["wild", "dance", "late-night"], lat: 30.3571, lng: 76.3689 },
+    { id: "evt_126", title: "Python Workshop", description: "Learn the basics of Pandas...", start_at: "2025-09-06T14:00:00Z", end_at: "2025-09-06T16:00:00Z", venue: "Computer Lab 3", tags: ["productive", "workshop", "tech"], lat: 30.3545, lng: 76.3660 },
+    { id: "evt_127", title: "Freshers' Welcome Bash", description: "The official welcome party...", start_at: "2025-09-08T21:00:00Z", end_at: "2025-09-09T01:00:00Z", venue: "Main Auditorium", tags: ["wild", "dance", "late-night"], lat: 30.3558, lng: 76.3625 },
+    { id: "evt_128", title: "Guest Lecture: The Future of AI", description: "A talk by a leading researcher...", start_at: "2025-09-15T15:00:00Z", end_at: "2025-09-15T16:30:00Z", venue: "Main Auditorium", tags: ["productive", "tech"], lat: 30.3558, lng: 76.3625 },
+    { id: "evt_129", title: "Movie Marathon: Christopher Nolan", description: "A back-to-back screening...", start_at: "2025-09-20T18:00:00Z", end_at: "2025-09-20T23:00:00Z", venue: "Main Auditorium", tags: ["chill", "movie"], lat: 30.3558, lng: 76.3625 },
+    { id: "evt_130", title: "Open Mic Night", description: "Showcase your talent...", start_at: "2025-09-12T19:00:00Z", end_at: "2025-09-12T21:00:00Z", venue: "Tan Auditorium", tags: ["chill", "art", "music"], lat: 30.3565, lng: 76.3645 },
+    { id: "evt_131", title: "Debate Championship Finals", description: "Watch the best debaters...", start_at: "2025-09-19T16:00:00Z", end_at: "2025-09-19T18:00:00Z", venue: "Tan Auditorium", tags: ["productive"], lat: 30.3565, lng: 76.3645 },
+    { id: "evt_132", title: "Robotics Workshop", description: "A hands-on workshop...", start_at: "2025-09-13T10:00:00Z", end_at: "2025-09-13T13:00:00Z", venue: "COS", tags: ["productive", "tech", "workshop"], lat: 30.3540, lng: 76.3655 },
+    { id: "evt_133", title: "Science Exhibition", description: "Explore innovative projects...", start_at: "2025-09-22T11:00:00Z", end_at: "2025-09-22T17:00:00Z", venue: "COS", tags: ["productive", "tech", "art"], lat: 30.3540, lng: 76.3655 },
+    { id: "evt_134", title: "Food Carnival", description: "A paradise for foodies!", start_at: "2025-09-14T12:00:00Z", end_at: "2025-09-14T22:00:00Z", venue: "Fete Area", tags: ["chill", "wild"], lat: 30.3580, lng: 76.3695 },
+    { id: "evt_135", title: "Street Play Festival", description: "Experience powerful performances...", start_at: "2025-09-21T17:00:00Z", end_at: "2025-09-21T20:00:00Z", venue: "Fete Area", tags: ["art", "chill"], lat: 30.3580, lng: 76.3695 },
+    { id: "evt_136", title: "Kite Flying Competition", description: "Let your kites soar high...", start_at: "2025-09-28T14:00:00Z", end_at: "2025-09-28T17:00:00Z", venue: "Fete Area", tags: ["chill", "wild"], lat: 30.3580, lng: 76.3695 },
 ];
 
 // --- MAP CUSTOMIZATION & STYLES ---
-const lightMapStyles = [{"elementType":"geometry","stylers":[{"color":"#f5f5f5"}]},{"elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#f5f5f5"}]},{"featureType":"administrative.land_parcel","elementType":"labels.text.fill","stylers":[{"color":"#bdbdbd"}]},{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#eeeeee"}]},{"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},{"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#e5e5e5"}]},{"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},{"featureType":"road.arterial","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#dadada"}]},{"featureType":"road.highway","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},{"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},{"featureType":"transit.line","elementType":"geometry","stylers":[{"color":"#e5e5e5"}]},{"featureType":"transit.station","elementType":"geometry","stylers":[{"color":"#eeeeee"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#c9c9c9"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]}];
-const darkMapStyles = [{"elementType":"geometry","stylers":[{"color":"#242f3e"}]},{"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},{"elementType":"labels.text.stroke","stylers":[{"color":"#242f3e"}]},{"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#d59563"}]},{"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#d59563"}]},{"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#263c3f"}]},{"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#6b9a76"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#38414e"}]},{"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#212a37"}]},{"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#9ca5b3"}]},{"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#746855"}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#1f2835"}]},{"featureType":"road.highway","elementType":"labels.text.fill","stylers":[{"color":"#f3d19c"}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#2f3948"}]},{"featureType":"transit.station","elementType":"labels.text.fill","stylers":[{"color":"#d59563"}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#17263c"}]},{"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#515c6d"}]},{"featureType":"water","elementType":"labels.text.stroke","stylers":[{"color":"#17263c"}]}];
+const lightMapStyles = [{ "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] }, { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#f5f5f5" }] }, { "featureType": "administrative.land_parcel", "elementType": "labels.text.fill", "stylers": [{ "color": "#bdbdbd" }] }, { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#eeeeee" }] }, { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] }, { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#e5e5e5" }] }, { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] }, { "featureType": "road.arterial", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] }, { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#dadada" }] }, { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] }, { "featureType": "road.local", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] }, { "featureType": "transit.line", "elementType": "geometry", "stylers": [{ "color": "#e5e5e5" }] }, { "featureType": "transit.station", "elementType": "geometry", "stylers": [{ "color": "#eeeeee" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#c9c9c9" }] }, { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] }];
+const darkMapStyles = [{ "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#263c3f" }] }, { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#6b9a76" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] }, { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#746855" }] }, { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1f2835" }] }, { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#f3d19c" }] }, { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f3948" }] }, { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] }, { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#515c6d" }] }, { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }];
 
 const getMapOptions = (theme) => ({
     styles: theme === 'dark' ? darkMapStyles : lightMapStyles,
@@ -47,29 +48,29 @@ const getMapOptions = (theme) => ({
 // --- COMPONENTS (Defined outside of App for performance) ---
 
 const SplineScene = () => {
-  useEffect(() => {
-    const scriptId = 'spline-viewer-script';
-    if (document.getElementById(scriptId)) return; 
+    useEffect(() => {
+        const scriptId = 'spline-viewer-script';
+        if (document.getElementById(scriptId)) return;
 
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.type = 'module';
-    script.src = 'https://unpkg.com/@splinetool/viewer@1.0.25/build/spline-viewer.js';
-    document.head.appendChild(script);
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.type = 'module';
+        script.src = 'https://unpkg.com/@splinetool/viewer@1.0.25/build/spline-viewer.js';
+        document.head.appendChild(script);
 
-    return () => {
-      const existingScript = document.getElementById(scriptId);
-      if (existingScript) {
-        // document.head.removeChild(existingScript);
-      }
-    };
-  }, []);
+        return () => {
+            const existingScript = document.getElementById(scriptId);
+            if (existingScript) {
+                // document.head.removeChild(existingScript);
+            }
+        };
+    }, []);
 
-  return (
-    <div className="absolute top-0 left-0 w-full h-full z-0">
-      <spline-viewer url="https://draft.spline.design/b6NpAoTs9BU03p64/scene.splinecode"></spline-viewer>
-    </div>
-  );
+    return (
+        <div className="absolute top-0 left-0 w-full h-full z-0">
+            <spline-viewer url="https://draft.spline.design/b6NpAoTs9BU03p64/scene.splinecode"></spline-viewer>
+        </div>
+    );
 };
 
 
@@ -100,7 +101,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
                     text: shareText,
                     url: shareUrl,
                 });
-            } catch (e) {}
+            } catch (e) { }
         } else {
             try {
                 await navigator.clipboard.writeText(shareUrl);
@@ -137,7 +138,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
                         <div className="w-full md:w-1/2">
                             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Location</h3>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
-                            {mapScriptLoaded ? <MapView events={[event]} setSelectedEvent={() => {}} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
+                            {mapScriptLoaded ? <MapView events={[event]} setSelectedEvent={() => { }} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
                         </div>
                         <div className="flex flex-col gap-4 w-full max-w-md mx-auto mt-8 md:mt-0 items-center">
                             <div className="border-b border-gray-200 dark:border-purple-700/50 pb-2 mb-2 w-full text-center">
@@ -162,7 +163,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
     );
 };
 
-const LoginPage = ({ setPage, setIsLoggedIn }) => {
+const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
@@ -188,14 +189,15 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
                 const errorData = await response.json();
                 throw new Error(errorData.detail || 'Failed to log in');
             }
-            
+
             const data = await response.json();
-            console.log("Received token:", data.access_token); 
+            console.log("Received token:", data.access_token);
 
             setIsLoggedIn(true);
-            localStorage.setItem('isLoggedIn', 'true');
+            // localStorage.setItem('isLoggedIn', 'true'); // Handled by App useEffect
             if (data.access_token) {
-                localStorage.setItem('token', data.access_token);
+                setToken(data.access_token);
+                // localStorage.setItem('token', data.access_token); // Handled by App useEffect
             }
             setPage('events');
 
@@ -210,7 +212,7 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
         <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-6">
-                  <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
+                    <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
                 </div>
                 <form onSubmit={handleSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
                     <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Welcome Back!</h2>
@@ -231,18 +233,19 @@ const LoginPage = ({ setPage, setIsLoggedIn }) => {
                     <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Don't have an account? <button type="button" onClick={() => setPage('signup')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Sign Up</button></p>
                 </form>
             </div>
-        </div> 
-    ); 
+        </div>
+    );
 };
 
-const SignupPage = ({ setPage }) => { 
-    const [email, setEmail] = useState(''); 
-    const [password, setPassword] = useState(''); 
+const SignupPage = ({ setPage, setToken }) => {
+    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e) => { 
-        e.preventDefault(); 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setError(null);
         setIsLoading(true);
 
@@ -250,14 +253,26 @@ const SignupPage = ({ setPage }) => {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/users/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, username, password })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.detail || 'Failed to sign up');
             }
-            
+
+            // Auto-login after signup to get token for interest selection
+            const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ username: email, password })
+            });
+
+            if (loginResponse.ok) {
+                const loginData = await loginResponse.json();
+                setToken(loginData.access_token);
+            }
+
             setPage('interest_selection');
 
         } catch (err) {
@@ -265,13 +280,13 @@ const SignupPage = ({ setPage }) => {
         } finally {
             setIsLoading(false);
         }
-    }; 
+    };
 
-    return ( 
+    return (
         <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-6">
-                  <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
+                    <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
                 </div>
                 <form onSubmit={handleSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
                     <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Create Your Account</h2>
@@ -279,6 +294,10 @@ const SignupPage = ({ setPage }) => {
                     <div className="mb-4">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-email">Email</label>
                         <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-username">Username</label>
+                        <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-username" type="text" placeholder="cool_student" value={username} onChange={e => setUsername(e.target.value)} required />
                     </div>
                     <div className="mb-6">
                         <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-password">Password</label>
@@ -292,10 +311,68 @@ const SignupPage = ({ setPage }) => {
                     <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Already have an account? <button type="button" onClick={() => setPage('login')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Log In</button></p>
                 </form>
             </div>
-        </div> 
-    ); 
+        </div>
+    );
 };
-const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => { const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon']; const [selectedInterests, setSelectedInterests] = useState([]); const toggleInterest = (interest) => { setSelectedInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]); }; const handleFinish = () => { console.log('User selected interests:', selectedInterests); alert('Your preferences have been saved!'); setIsLoggedIn(true); setPage('events'); }; return ( <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center"><div className="w-full max-w-2xl"><div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md p-8"><h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">What are you into?</h2><p className="text-center text-gray-500 dark:text-gray-400 mb-8">Select a few interests to help us personalize your event feed.</p><div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">{allInterests.map(interest => { const isSelected = selectedInterests.includes(interest); return (<button key={interest} onClick={() => toggleInterest(interest)} className={`capitalize font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full transition-all duration-200 ease-in-out transform hover:scale-105 ${isSelected ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'}`}>{interest}</button>); })}</div><div className="flex justify-center"><button onClick={handleFinish} disabled={selectedInterests.length < 1} className="w-full sm:w-1/2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">Finish</button></div></div></div></div> ); };
+const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => {
+    const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon'];
+    const [selectedInterests, setSelectedInterests] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const toggleInterest = (interest) => {
+        setSelectedInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]);
+    };
+
+    const handleFinish = async () => {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        try {
+            if (token) {
+                await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ interests: selectedInterests })
+                });
+            }
+            setIsLoggedIn(true);
+            setPage('events');
+        } catch (e) {
+            console.error("Failed to save interests", e);
+            // Proceed anyway
+            setIsLoggedIn(true);
+            setPage('events');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
+            <div className="w-full max-w-2xl">
+                <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md p-8">
+                    <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">What are you into?</h2>
+                    <p className="text-center text-gray-500 dark:text-gray-400 mb-8">Select a few interests to help us personalize your event feed.</p>
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">
+                        {allInterests.map(interest => {
+                            const isSelected = selectedInterests.includes(interest);
+                            return (
+                                <button key={interest} onClick={() => toggleInterest(interest)} className={`capitalize font-bold py-2 px-4 sm:py-3 sm:px-5 rounded-full transition-all duration-200 ease-in-out transform hover:scale-105 ${isSelected ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'}`}>{interest}</button>
+                            );
+                        })}
+                    </div>
+                    <div className="flex justify-center">
+                        <button onClick={handleFinish} disabled={selectedInterests.length < 1 || isLoading} className="w-full sm:w-1/2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            {isLoading ? 'Saving...' : 'Finish'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMode, viewMode, mapScriptLoaded, theme }) => (
     <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
@@ -312,9 +389,9 @@ const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMo
                 </div>
                 {viewMode === 'list' && <EventList events={events} setSelectedEvent={setSelectedEvent} />}
                 {viewMode === 'map' && (
-                mapScriptLoaded 
-                    ? <MapView events={events} setSelectedEvent={setSelectedEvent} theme={theme} /> 
-                    : <div className="text-center py-10">Loading Map...</div>
+                    mapScriptLoaded
+                        ? <MapView events={events} setSelectedEvent={setSelectedEvent} theme={theme} />
+                        : <div className="text-center py-10">Loading Map...</div>
                 )}
             </>
         )}
@@ -351,21 +428,21 @@ const LandingPage = ({ setPage }) => {
             <div className="relative z-10">
                 <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter">Find Your Vibe</h1>
                 <p className="mt-4 text-lg text-gray-400 max-w-2xl">Never miss out on what's happening on campus. The Loop is your one-stop shop for all college events.</p>
-                                {showPwaButton && (
-                                    <div className="flex justify-center w-full">
-                                        <button
-                                            onClick={handlePwaInstall}
-                                            className="mt-8 mb-2 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                                            style={{animation: 'fadeIn 0.4s'}}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
-                                            Download App
-                                        </button>
-                                    </div>
-                                )}
-                                <div className="flex justify-center w-full">
-                                    <button onClick={() => setPage('events')} className="mt-4 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
-                                </div>
+                {showPwaButton && (
+                    <div className="flex justify-center w-full">
+                        <button
+                            onClick={handlePwaInstall}
+                            className="mt-8 mb-2 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                            style={{ animation: 'fadeIn 0.4s' }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
+                            Download App
+                        </button>
+                    </div>
+                )}
+                <div className="flex justify-center w-full">
+                    <button onClick={() => setPage('events')} className="mt-4 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
+                </div>
             </div>
         </div>
     );
@@ -506,25 +583,27 @@ export default function App() {
                     setViewMode={setViewMode}
                     theme={theme}
                     setTheme={setTheme}
+                    setToken={setToken}
                 />
             )}
             <div className="page-transition">
                 {showSplash ? (
                     <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d1117] text-white animate-fadeIn">
                         <img
-                          src="/logo_transparent-192x192.PNG"
-                          alt="The Loop Logo"
-                          className="w-20 h-20 mb-6 animate-bounce rounded-2xl shadow-lg"
-                          style={{ background: 'transparent' }}
+                            src="/logo_transparent-192x192.PNG"
+                            alt="The Loop Logo"
+                            className="w-20 h-20 mb-6 animate-bounce rounded-2xl shadow-lg"
+                            style={{ background: 'transparent' }}
                         />
                         <span className="text-3xl font-bold tracking-tight">The Loop</span>
                     </div>
                 ) : (
                     <Routes>
                         <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} />} />
-                        <Route path="/login" element={<LoginPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
-                        <Route path="/signup" element={<SignupPage setPage={page => navigate(`/${page}`)} />} />
+                        <Route path="/login" element={<LoginPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
+                        <Route path="/signup" element={<SignupPage setPage={page => navigate(`/${page}`)} setToken={setToken} />} />
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
+                        <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} />} />
                         <Route path="/events" element={
                             <EventsContainer
                                 events={events}
@@ -538,10 +617,10 @@ export default function App() {
                             />
                         } />
                         <Route path="/events/:id" element={<EventDetailsRoute />} />
-                                                <Route path="*" element={<div className="flex flex-col items-center justify-center py-20 text-gray-500">
-                                                    <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16 mb-6" style={{ background: 'transparent' }} />
-                                                    <div>Page not found.</div>
-                                                </div>} />
+                        <Route path="*" element={<div className="flex flex-col items-center justify-center py-20 text-gray-500">
+                            <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16 mb-6" style={{ background: 'transparent' }} />
+                            <div>Page not found.</div>
+                        </div>} />
                     </Routes>
                 )}
             </div>

@@ -6,4 +6,6 @@ pydantic
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
+psycopg2-binary
+python-dotenv
 email-validator
