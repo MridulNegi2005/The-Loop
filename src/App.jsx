@@ -257,7 +257,7 @@ const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => {
     );
 };
 
-const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMode, viewMode, mapScriptLoaded, theme }) => (
+const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMode, viewMode, mapScriptLoaded, theme, currentUser }) => (
     <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
         {isLoading && <div className="text-center py-10 text-gray-500 dark:text-gray-400">Loading events from the server...</div>}
         {error && <div className="text-center mb-4 py-4 text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/50 border border-red-200 dark:border-red-700 rounded-lg">{error}</div>}
@@ -270,7 +270,7 @@ const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMo
                         <button onClick={() => setViewMode('map')} className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 text-gray-800 dark:text-white' : 'bg-transparent text-gray-600 dark:text-gray-400'}`}>Map View</button>
                     </div>
                 </div>
-                {viewMode === 'list' && <EventList events={events} setSelectedEvent={setSelectedEvent} />}
+                {viewMode === 'list' && <EventList events={events} setSelectedEvent={setSelectedEvent} currentUser={currentUser} />}
                 {viewMode === 'map' && (
                     mapScriptLoaded
                         ? <MapView events={events} setSelectedEvent={setSelectedEvent} theme={theme} />
@@ -298,6 +298,7 @@ export default function App() {
     const [showSplash, setShowSplash] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [onboardingData, setOnboardingData] = useState({});
+    const [currentUser, setCurrentUser] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -350,6 +351,28 @@ export default function App() {
             }
         };
         fetchEvents();
+    }, [token]);
+
+    // Fetch current user
+    React.useEffect(() => {
+        const fetchUser = async () => {
+            if (!token) {
+                setCurrentUser(null);
+                return;
+            }
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setCurrentUser(data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch user", e);
+            }
+        };
+        fetchUser();
     }, [token]);
 
     // Load Google Maps script when needed
@@ -469,6 +492,7 @@ export default function App() {
                                 viewMode={viewMode}
                                 mapScriptLoaded={mapScriptLoaded}
                                 theme={theme}
+                                currentUser={currentUser}
                             />
                         } />
                         <Route path="/events/:id" element={<EventDetailsRoute />} />

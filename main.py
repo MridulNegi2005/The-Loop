@@ -119,6 +119,24 @@ class Event(Base):
     lng = Column(Float)
     tags = Column(String) # Storing as a comma-separated string
 
+# Carpool Group Model
+class CarpoolGroup(Base):
+    __tablename__ = "carpool_groups"
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, index=True)
+    owner_id = Column(Integer, index=True)
+    location = Column(String)
+    time = Column(String)
+    capacity = Column(Integer)
+    
+# Carpool Request Model
+class CarpoolRequest(Base):
+    __tablename__ = "carpool_requests"
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(Integer, index=True)
+    requester_id = Column(Integer, index=True)
+    status = Column(String, default="pending") # pending, accepted, rejected
+
 # Create the database tables if they don't exist
 Base.metadata.create_all(bind=engine)
 
@@ -166,6 +184,34 @@ class UserUpdate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# Carpool Schemas
+class CarpoolGroupCreate(BaseModel):
+    location: str
+    time: str
+    capacity: int
+
+class CarpoolGroupResponse(BaseModel):
+    id: int
+    event_id: int
+    owner_id: int
+    location: str
+    time: str
+    capacity: int
+    owner_username: Optional[str] = None
+    class Config:
+        orm_mode = True
+
+class CarpoolRequestResponse(BaseModel):
+    id: int
+    group_id: int
+    requester_id: int
+    status: str
+    requester_username: Optional[str] = None
+    group_location: Optional[str] = None
+    event_title: Optional[str] = None
+    class Config:
+        orm_mode = True
 
 # --- Dependency for Database Session ---
 def get_db():
@@ -470,6 +516,137 @@ async def update_user_me(user_update: UserUpdate, current_user: User = Depends(g
     db.commit()
     db.refresh(current_user)
     return current_user
+
+# --- Carpool Endpoints ---
+
+@app.post("/events/{event_id}/carpool", response_model=CarpoolGroupResponse)
+async def create_carpool_group(
+    event_id: int, 
+    group: CarpoolGroupCreate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    # Check if user joined event
+    joined = db.query(UserEvent).filter(
+        UserEvent.user_id == current_user.id, 
+        UserEvent.event_id == event_id
+    ).first()
+    if not joined:
+        raise HTTPException(status_code=400, detail="You must join the event first")
+
+    new_group = CarpoolGroup(
+        event_id=event_id,
+        owner_id=current_user.id,
+        location=group.location,
+        time=group.time,
+        capacity=group.capacity
+    )
+    db.add(new_group)
+    db.commit()
+    db.refresh(new_group)
+    
+    # Add owner username for response
+    new_group.owner_username = current_user.username
+    return new_group
+
+@app.get("/events/{event_id}/carpool", response_model=List[CarpoolGroupResponse])
+async def get_carpool_groups(event_id: int, db: Session = Depends(get_db)):
+    groups = db.query(CarpoolGroup).filter(CarpoolGroup.event_id == event_id).all()
+    for group in groups:
+        owner = db.query(User).filter(User.id == group.owner_id).first()
+        group.owner_username = owner.username if owner else "Unknown"
+    return groups
+
+@app.post("/carpool/{group_id}/join")
+async def join_carpool_group(
+    group_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    group = db.query(CarpoolGroup).filter(CarpoolGroup.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+        
+    if group.owner_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot join your own group")
+        
+    existing = db.query(CarpoolRequest).filter(
+        CarpoolRequest.group_id == group_id,
+        CarpoolRequest.requester_id == current_user.id
+    ).first()
+    
+    if existing:
+        return {"message": "Request already sent"}
+        
+    new_request = CarpoolRequest(
+        group_id=group_id,
+        requester_id=current_user.id
+    )
+    db.add(new_request)
+    db.commit()
+    return {"message": "Request sent"}
+
+@app.get("/carpool/requests/received", response_model=List[CarpoolRequestResponse])
+async def get_received_requests(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Get groups owned by user
+    owned_groups = db.query(CarpoolGroup).filter(CarpoolGroup.owner_id == current_user.id).all()
+    group_ids = [g.id for g in owned_groups]
+    
+    requests = db.query(CarpoolRequest).filter(CarpoolRequest.group_id.in_(group_ids)).all()
+    
+    results = []
+    for req in requests:
+        requester = db.query(User).filter(User.id == req.requester_id).first()
+        group = db.query(CarpoolGroup).filter(CarpoolGroup.id == req.group_id).first()
+        event = db.query(Event).filter(Event.id == group.event_id).first()
+        
+        req.requester_username = requester.username if requester else "Unknown"
+        req.group_location = group.location
+        req.event_title = event.title
+        results.append(req)
+        
+    return results
+
+@app.get("/carpool/requests/sent", response_model=List[CarpoolRequestResponse])
+async def get_sent_requests(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    requests = db.query(CarpoolRequest).filter(CarpoolRequest.requester_id == current_user.id).all()
+    
+    results = []
+    for req in requests:
+        group = db.query(CarpoolGroup).filter(CarpoolGroup.id == req.group_id).first()
+        event = db.query(Event).filter(Event.id == group.event_id).first()
+        
+        req.group_location = group.location
+        req.event_title = event.title
+        results.append(req)
+        
+    return results
+
+@app.post("/carpool/requests/{request_id}/{action}")
+async def manage_request(
+    request_id: int, 
+    action: str, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    req = db.query(CarpoolRequest).filter(CarpoolRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+        
+    group = db.query(CarpoolGroup).filter(CarpoolGroup.id == req.group_id).first()
+    if group.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    if action == "accept":
+        req.status = "accepted"
+        # Optional: decrement capacity? For now just simple status.
+    elif action == "reject":
+        req.status = "rejected"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+        
+    db.commit()
+    return {"message": f"Request {action}ed"}
 
 # --- How to Run ---
 # 1. Make sure you have the required libraries:

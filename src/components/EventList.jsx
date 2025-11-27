@@ -3,7 +3,7 @@ import EventCard from './EventCard';
 import { formatDate } from '../lib/utils';
 import { useLocation } from 'react-router-dom';
 
-export default function EventList({ events, setSelectedEvent }) {
+export default function EventList({ events, setSelectedEvent, currentUser }) {
     const eventsByDate = events.reduce((acc, event) => {
         const dateKey = new Date(event.start_at).toISOString().slice(0, 10);
         if (!acc[dateKey]) acc[dateKey] = [];
@@ -352,7 +352,7 @@ export default function EventList({ events, setSelectedEvent }) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                                 {eventsByDate[date].map(event => (
                                     <div key={event.id} className="h-full">
-                                        <EventCard event={event} onSelect={() => setSelectedEvent(event)} />
+                                        <EventCard event={event} onSelect={() => setSelectedEvent(event)} currentUser={currentUser} />
                                     </div>
                                 ))}
                             </div>
