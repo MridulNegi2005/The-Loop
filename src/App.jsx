@@ -560,20 +560,6 @@ export default function App() {
             {showOnboarding && (
                 <WelcomeOnboarding
                     // Pass necessary props. We need to capture these from SignupPage, 
-                    // but since SignupPage is a route, we need a way to pass data up.
-                    // For simplicity, we'll let SignupPage handle the initial inputs and pass them up via state in App if needed,
-                    // OR better yet, let SignupPage render the Onboarding component itself but using a Portal?
-                    // Actually, the plan was to lift state. Let's adjust SignupPage to receive setShowOnboarding.
-                    // But wait, WelcomeOnboarding needs email/username/password.
-                    // Let's pass a "onboardingData" state object to App as well.
-                    {...onboardingData}
-                    setToken={setToken}
-                    setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
-                    onComplete={() => setShowOnboarding(false)}
-                />
-            )}
-
-            {location.pathname !== '/' && !showSplash && (
                 <Header
                     setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
                     isLoggedIn={isLoggedIn}

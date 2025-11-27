@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const WelcomeOnboarding = ({ email, username, password, setToken, setPage, onComplete }) => {
+const WelcomeOnboarding = ({ email, username, password, setToken, setIsLoggedIn, setPage, onComplete }) => {
     const [step, setStep] = useState('name'); // name, interests, processing, success
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -52,6 +52,7 @@ const WelcomeOnboarding = ({ email, username, password, setToken, setPage, onCom
             const loginData = await loginResponse.json();
             const token = loginData.access_token;
             setToken(token);
+            setIsLoggedIn(true);
 
             // 3. Update Profile (Name & Interests)
             await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
@@ -67,6 +68,8 @@ const WelcomeOnboarding = ({ email, username, password, setToken, setPage, onCom
                 })
             });
 
+            // Navigate to events page in background so it's ready when overlay lifts
+            setPage('events');
             setStep('success');
 
         } catch (err) {
