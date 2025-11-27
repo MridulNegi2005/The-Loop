@@ -11,6 +11,10 @@ def reset_db():
     print("Creating all tables...")
     Base.metadata.create_all(bind=engine)
     print("Tables created successfully.")
+    
+    from main import seed_database
+    print("Seeding database...")
+    seed_database()
 
 if __name__ == "__main__":
     reset_db()

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import EventCard from './components/EventCard';
+import CarpoolModal from './components/CarpoolModal';
 import EventList from './components/EventList';
 import MapView from './components/MapView';
 import ProfilePage from './components/ProfilePage';
@@ -69,7 +70,7 @@ const getMapOptions = (theme) => ({
 // EventList moved to `src/components/EventList.jsx` (imported at top)
 
 
-const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
+const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEvents }) => {
     const navigate = useNavigate();
     // Share logic
     const shareUrl = window.location.origin + `/events/${event.id}`;
@@ -102,6 +103,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
     // Join/Interested Logic
     const [isJoined, setIsJoined] = React.useState(event.is_joined);
     const [isJoining, setIsJoining] = React.useState(false);
+    const [showCarpool, setShowCarpool] = React.useState(false);
 
     const handleJoin = async () => {
         const token = localStorage.getItem('token');
@@ -120,8 +122,8 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
             });
             if (response.ok) {
                 setIsJoined(true);
-                // Ideally, we should also update the global events state or re-fetch, 
-                // but for now local state update gives immediate feedback.
+                // Update global events state to reflect the join status
+                fetchEvents();
             } else {
                 const data = await response.json();
                 alert(data.detail || "Failed to join event.");
@@ -161,6 +163,23 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
                             <div className="border-b border-gray-200 dark:border-purple-700/50 pb-2 mb-2 w-full text-center">
                                 <span className="text-lg font-semibold text-purple-700 dark:text-purple-300">Event Actions</span>
                             </div>
+
+                            {isJoined && (
+                                <button
+                                    onClick={() => setShowCarpool(true)}
+                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 w-full mb-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                    Carpool
+                                </button>
+                            )}
+                            {showCarpool && (
+                                <CarpoolModal
+                                    eventId={event.id}
+                                    onClose={() => setShowCarpool(false)}
+                                    currentUser={currentUser}
+                                />
+                            )}
 
                             <button
                                 onClick={handleJoin}
@@ -329,51 +348,51 @@ export default function App() {
 
     const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-    React.useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const headers = {};
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/events`, {
-                    headers: headers
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                setEvents(data);
-            } catch (e) {
-                console.error("Failed to fetch events:", e);
-                setError("Could not connect to the server. Displaying sample data.");
-                setEvents(mockEvents);
-            } finally {
-                setIsLoading(false);
+    const fetchEvents = React.useCallback(async () => {
+        try {
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
-        };
-        fetchEvents();
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/events`, {
+                headers: headers
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            console.log("Events fetched:", data.length);
+            setEvents(data);
+        } catch (e) {
+            console.error("Failed to fetch events:", e);
+        } finally {
+            setIsLoading(false);
+        }
     }, [token]);
 
-    // Fetch current user
-    React.useEffect(() => {
-        const fetchUser = async () => {
-            if (!token) {
-                setCurrentUser(null);
-                return;
+    const fetchUser = React.useCallback(async () => {
+        if (!token) return;
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setCurrentUser(data);
+            } else if (response.status === 401) {
+                console.warn("User token invalid, logging out.");
+                setToken('');
+                setIsLoggedIn(false);
+                localStorage.removeItem('token');
+                localStorage.setItem('isLoggedIn', 'false');
             }
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setCurrentUser(data);
-                }
-            } catch (e) {
-                console.error("Failed to fetch user", e);
-            }
-        };
-        fetchUser();
+        } catch (e) {
+            console.error("Failed to fetch user", e);
+        }
     }, [token]);
+
+    React.useEffect(() => {
+        fetchEvents();
+        fetchUser();
+    }, [fetchEvents, fetchUser]);
 
     // Load Google Maps script when needed
     React.useEffect(() => {
@@ -398,13 +417,16 @@ export default function App() {
         const { id } = useParams();
         // Find event by id, allowing for string/number mismatch
         const event = events.find(e => e.id.toString() === id.toString());
+
         if (isLoading) {
             return <div className="text-center py-10 text-gray-500">Loading event...</div>;
         }
+
         if (!event) {
             return <div className="text-center py-10 text-gray-500">Event not found. (Check the event link or try refreshing the events list.)</div>;
         }
-        return <EventDetailsPage event={event} mapScriptLoaded={mapScriptLoaded} theme={theme} />;
+
+        return <EventDetailsPage event={event} mapScriptLoaded={mapScriptLoaded} theme={theme} currentUser={currentUser} fetchEvents={fetchEvents} />;
     }
 
     return (

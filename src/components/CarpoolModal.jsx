@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Clock, Users, Plus } from 'lucide-react';
+import { X, MapPin, Clock, Users, Plus, Mail } from 'lucide-react';
 
 const CarpoolModal = ({ eventId, onClose, currentUser }) => {
     const [groups, setGroups] = useState([]);
@@ -116,6 +116,24 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                                                     <span>{group.time}</span>
                                                 </div>
                                             </div>
+
+                                            {/* Owner View: Show Members */}
+                                            {currentUser && currentUser.username === group.owner_username && group.members && group.members.length > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-white/10">
+                                                    <h4 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Members</h4>
+                                                    <div className="space-y-2">
+                                                        {group.members.map((member, idx) => (
+                                                            <div key={idx} className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                                                                <span className="text-sm text-white">@{member.username}</span>
+                                                                <a href={`mailto:${member.email}`} className="p-1.5 bg-purple-500/20 text-purple-300 hover:bg-purple-500/40 rounded-full transition-colors" title="Contact Member">
+                                                                    <Mail size={14} />
+                                                                </a>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             {currentUser && currentUser.username !== group.owner_username && (
                                                 <button
                                                     onClick={() => handleJoinGroup(group.id)}

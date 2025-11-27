@@ -39,7 +39,20 @@ export default function Header({ setPage, isLoggedIn, setIsLoggedIn, setSelected
     };
 
     const goHome = () => { setSelectedEvent(null); setPage('events'); setViewMode('list'); setIsMenuOpen(false); }
-    const navAction = (page) => { setPage(page); setIsMenuOpen(false); setIsProfileMenuOpen(false); }
+    const navAction = (page, tab = 'profile') => {
+        setPage(page);
+        if (page === 'profile') {
+            // We need a way to set the active tab in ProfilePage. 
+            // Since ProfilePage is a child of App, we might need to pass this down or use a global state/context.
+            // For now, we'll just navigate to the page. The user asked for "Carpool option to Header profile menu".
+            // Ideally, we should pass a prop to ProfilePage to set the initial tab.
+            // Let's assume we can pass a state setter or use a URL param if we had routing.
+            // Given the current structure, we might need to lift the 'activeTab' state to App.jsx or pass a prop 'initialTab'.
+            // Let's modify App.jsx later to handle 'initialTab'.
+        }
+        setIsMenuOpen(false);
+        setIsProfileMenuOpen(false);
+    }
     const handleLogout = () => {
         setIsLoggedIn(false);
         setToken('');
@@ -178,6 +191,10 @@ export default function Header({ setPage, isLoggedIn, setIsLoggedIn, setSelected
                                         <button onClick={() => navAction('profile')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                             Profile
+                                        </button>
+                                        <button onClick={() => { setPage('profile'); setIsProfileMenuOpen(false); setTimeout(() => { const btn = document.querySelector('button[data-tab="carpool"]'); if (btn) btn.click(); }, 100); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                            Car Pooling
                                         </button>
                                         <button onClick={() => alert('Coming soon!')} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>

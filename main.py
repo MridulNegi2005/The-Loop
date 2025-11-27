@@ -199,6 +199,7 @@ class CarpoolGroupResponse(BaseModel):
     time: str
     capacity: int
     owner_username: Optional[str] = None
+    members: Optional[List[dict]] = None # List of {username, email} for owner
     class Config:
         orm_mode = True
 
@@ -262,49 +263,49 @@ def seed_database():
         print("Database is empty. Seeding with initial events...")
         initial_events = [
             # ...existing events...
-            Event(title="Annual Tech Fest Kick-off", description="Join us for the opening ceremony of the biggest tech fest on campus. Keynotes, food, and fun!", start_at="2025-09-01T18:00:00Z", end_at="2025-09-01T20:00:00Z", venue="Main Auditorium", tags="productive,tech,fest", lat=30.3558, lng=76.3625),
-            Event(title="Acoustic Night at the Cafe", description="Unwind with some live music from talented student artists. Grab a coffee and enjoy the vibes.", start_at="2025-09-03T19:30:00Z", end_at="2025-09-03T21:00:00Z", venue="The Student Cafe", tags="chill,music,art", lat=30.3532, lng=76.3651),
-            Event(title="Late Night Dance Party", description="DJ Ron is back with the hottest tracks. Get ready to dance the night away!", start_at="2025-09-05T22:00:00Z", end_at="2025-09-06T02:00:00Z", venue="Gymnasium Hall", tags="wild,dance,late-night", lat=30.3571, lng=76.3689),
-            Event(title="Python Workshop", description="Learn the basics of Pandas and Matplotlib in this hands-on workshop by the Coding Club.", start_at="2025-09-06T14:00:00Z", end_at="2025-09-06T16:00:00Z", venue="Computer Lab 3", tags="productive,workshop,tech", lat=30.3545, lng=76.3660),
-            Event(title="Freshers' Welcome Bash", description="The official welcome party for all first-year students. Music, dance, and a night to remember!", start_at="2025-09-08T21:00:00Z", end_at="2025-09-09T01:00:00Z", venue="Main Auditorium", tags="wild,dance,late-night", lat=30.3558, lng=76.3625),
-            Event(title="Guest Lecture: The Future of AI", description="A talk by a leading researcher on the future of artificial intelligence and machine learning.", start_at="2025-09-15T15:00:00Z", end_at="2025-09-15T16:30:00Z", venue="Main Auditorium", tags="productive,tech", lat=30.3558, lng=76.3625),
-            Event(title="Movie Marathon: Christopher Nolan", description="Join the film club for a back-to-back screening of Nolan's classics.", start_at="2025-09-20T18:00:00Z", end_at="2025-09-20T23:00:00Z", venue="Main Auditorium", tags="chill,movie", lat=30.3558, lng=76.3625),
-            Event(title="Open Mic Night", description="Showcase your talent or just enjoy the performances. Poetry, comedy, music, and more!", start_at="2025-09-12T19:00:00Z", end_at="2025-09-12T21:00:00Z", venue="Tan Auditorium", tags="chill,art,music", lat=30.3565, lng=76.3645),
-            Event(title="Debate Championship Finals", description="Watch the best debaters on campus battle it out for the annual trophy.", start_at="2025-09-19T16:00:00Z", end_at="2025-09-19T18:00:00Z", venue="Tan Auditorium", tags="productive", lat=30.3565, lng=76.3645),
-            Event(title="Robotics Workshop", description="A hands-on workshop on building and programming autonomous robots.", start_at="2025-09-13T10:00:00Z", end_at="2025-09-13T13:00:00Z", venue="COS", tags="productive,tech,workshop", lat=30.3540, lng=76.3655),
-            Event(title="Science Exhibition", description="Explore innovative projects and experiments by students from various departments.", start_at="2025-09-22T11:00:00Z", end_at="2025-09-22T17:00:00Z", venue="COS", tags="productive,tech,art", lat=30.3540, lng=76.3655),
-            Event(title="Food Carnival", description="A paradise for foodies! Stalls from all over the city offering delicious treats.", start_at="2025-09-14T12:00:00Z", end_at="2025-09-14T22:00:00Z", venue="Fete Area", tags="chill,wild", lat=30.3580, lng=76.3695),
-            Event(title="Street Play Festival", description="Experience powerful performances on social themes by the dramatics society.", start_at="2025-09-21T17:00:00Z", end_at="2025-09-21T20:00:00Z", venue="Fete Area", tags="art,chill", lat=30.3580, lng=76.3695),
-            Event(title="Kite Flying Competition", description="Let your kites soar high in this fun-filled competition. Prizes for the best kite!", start_at="2025-09-28T14:00:00Z", end_at="2025-09-28T17:00:00Z", venue="Fete Area", tags="chill,wild", lat=30.3580, lng=76.3695),
+            Event(title="Annual Tech Fest Kick-off", description="Join us for the opening ceremony of the biggest tech fest on campus. Keynotes, food, and fun!", start_at="2025-12-01T18:00:00Z", end_at="2025-12-01T20:00:00Z", venue="Main Auditorium", tags="productive,tech,fest", lat=30.3558, lng=76.3625),
+            Event(title="Acoustic Night at the Cafe", description="Unwind with some live music from talented student artists. Grab a coffee and enjoy the vibes.", start_at="2025-12-03T19:30:00Z", end_at="2025-12-03T21:00:00Z", venue="The Student Cafe", tags="chill,music,art", lat=30.3532, lng=76.3651),
+            Event(title="Late Night Dance Party", description="DJ Ron is back with the hottest tracks. Get ready to dance the night away!", start_at="2025-12-05T22:00:00Z", end_at="2025-12-06T02:00:00Z", venue="Gymnasium Hall", tags="wild,dance,late-night", lat=30.3571, lng=76.3689),
+            Event(title="Python Workshop", description="Learn the basics of Pandas and Matplotlib in this hands-on workshop by the Coding Club.", start_at="2025-12-06T14:00:00Z", end_at="2025-12-06T16:00:00Z", venue="Computer Lab 3", tags="productive,workshop,tech", lat=30.3545, lng=76.3660),
+            Event(title="Freshers' Welcome Bash", description="The official welcome party for all first-year students. Music, dance, and a night to remember!", start_at="2025-12-08T21:00:00Z", end_at="2025-12-09T01:00:00Z", venue="Main Auditorium", tags="wild,dance,late-night", lat=30.3558, lng=76.3625),
+            Event(title="Guest Lecture: The Future of AI", description="A talk by a leading researcher on the future of artificial intelligence and machine learning.", start_at="2025-12-15T15:00:00Z", end_at="2025-12-15T16:30:00Z", venue="Main Auditorium", tags="productive,tech", lat=30.3558, lng=76.3625),
+            Event(title="Movie Marathon: Christopher Nolan", description="Join the film club for a back-to-back screening of Nolan's classics.", start_at="2025-12-20T18:00:00Z", end_at="2025-12-20T23:00:00Z", venue="Main Auditorium", tags="chill,movie", lat=30.3558, lng=76.3625),
+            Event(title="Open Mic Night", description="Showcase your talent or just enjoy the performances. Poetry, comedy, music, and more!", start_at="2025-12-12T19:00:00Z", end_at="2025-12-12T21:00:00Z", venue="Tan Auditorium", tags="chill,art,music", lat=30.3565, lng=76.3645),
+            Event(title="Debate Championship Finals", description="Watch the best debaters on campus battle it out for the annual trophy.", start_at="2025-12-19T16:00:00Z", end_at="2025-12-19T18:00:00Z", venue="Tan Auditorium", tags="productive", lat=30.3565, lng=76.3645),
+            Event(title="Robotics Workshop", description="A hands-on workshop on building and programming autonomous robots.", start_at="2025-12-13T10:00:00Z", end_at="2025-12-13T13:00:00Z", venue="COS", tags="productive,tech,workshop", lat=30.3540, lng=76.3655),
+            Event(title="Science Exhibition", description="Explore innovative projects and experiments by students from various departments.", start_at="2025-12-22T11:00:00Z", end_at="2025-12-22T17:00:00Z", venue="COS", tags="productive,tech,art", lat=30.3540, lng=76.3655),
+            Event(title="Food Carnival", description="A paradise for foodies! Stalls from all over the city offering delicious treats.", start_at="2025-12-14T12:00:00Z", end_at="2025-12-14T22:00:00Z", venue="Fete Area", tags="chill,wild", lat=30.3580, lng=76.3695),
+            Event(title="Street Play Festival", description="Experience powerful performances on social themes by the dramatics society.", start_at="2025-12-21T17:00:00Z", end_at="2025-12-21T20:00:00Z", venue="Fete Area", tags="art,chill", lat=30.3580, lng=76.3695),
+            Event(title="Kite Flying Competition", description="Let your kites soar high in this fun-filled competition. Prizes for the best kite!", start_at="2025-12-28T14:00:00Z", end_at="2025-12-28T17:00:00Z", venue="Fete Area", tags="chill,wild", lat=30.3580, lng=76.3695),
 
             # --- Added for timeline demo: more events, more variety ---
-            # 2025-09-06: 4 events (to create a large gap)
-            Event(title="Morning Yoga", description="Start your day with a relaxing yoga session.", start_at="2025-09-06T06:00:00Z", end_at="2025-09-06T07:00:00Z", venue="Lawn", tags="chill,productive", lat=30.3550, lng=76.3620),
-            Event(title="Brunch Social", description="Meet and greet with brunch.", start_at="2025-09-06T10:00:00Z", end_at="2025-09-06T12:00:00Z", venue="Cafeteria", tags="chill,food", lat=30.3530, lng=76.3660),
-            Event(title="Afternoon Coding Jam", description="Collaborative coding session.", start_at="2025-09-06T16:30:00Z", end_at="2025-09-06T18:00:00Z", venue="Computer Lab 3", tags="tech,productive", lat=30.3545, lng=76.3660),
+            # 2025-12-06: 4 events (to create a large gap)
+            Event(title="Morning Yoga", description="Start your day with a relaxing yoga session.", start_at="2025-12-06T06:00:00Z", end_at="2025-12-06T07:00:00Z", venue="Lawn", tags="chill,productive", lat=30.3550, lng=76.3620),
+            Event(title="Brunch Social", description="Meet and greet with brunch.", start_at="2025-12-06T10:00:00Z", end_at="2025-12-06T12:00:00Z", venue="Cafeteria", tags="chill,food", lat=30.3530, lng=76.3660),
+            Event(title="Afternoon Coding Jam", description="Collaborative coding session.", start_at="2025-12-06T16:30:00Z", end_at="2025-12-06T18:00:00Z", venue="Computer Lab 3", tags="tech,productive", lat=30.3545, lng=76.3660),
 
-            # 2025-09-07: 1 event (small gap)
-            Event(title="Photography Walk", description="Explore campus and capture moments.", start_at="2025-09-07T09:00:00Z", end_at="2025-09-07T11:00:00Z", venue="Campus Grounds", tags="art,chill", lat=30.3560, lng=76.3630),
+            # 2025-12-07: 1 event (small gap)
+            Event(title="Photography Walk", description="Explore campus and capture moments.", start_at="2025-12-07T09:00:00Z", end_at="2025-12-07T11:00:00Z", venue="Campus Grounds", tags="art,chill", lat=30.3560, lng=76.3630),
 
-            # 2025-09-10: 2 events
-            Event(title="Chess Tournament", description="Compete for the chess champion title.", start_at="2025-09-10T14:00:00Z", end_at="2025-09-10T18:00:00Z", venue="Games Room", tags="chill,productive", lat=30.3570, lng=76.3670),
-            Event(title="Evening Meditation", description="Guided meditation for all.", start_at="2025-09-10T19:00:00Z", end_at="2025-09-10T20:00:00Z", venue="Lawn", tags="chill,productive", lat=30.3550, lng=76.3620),
+            # 2025-12-10: 2 events
+            Event(title="Chess Tournament", description="Compete for the chess champion title.", start_at="2025-12-10T14:00:00Z", end_at="2025-12-10T18:00:00Z", venue="Games Room", tags="chill,productive", lat=30.3570, lng=76.3670),
+            Event(title="Evening Meditation", description="Guided meditation for all.", start_at="2025-12-10T19:00:00Z", end_at="2025-12-10T20:00:00Z", venue="Lawn", tags="chill,productive", lat=30.3550, lng=76.3620),
 
-            # 2025-09-12: 3 events
-            Event(title="Poetry Slam", description="Share your poetry or listen in.", start_at="2025-09-12T16:00:00Z", end_at="2025-09-12T18:00:00Z", venue="Tan Auditorium", tags="art,chill", lat=30.3565, lng=76.3645),
-            Event(title="Board Games Night", description="Play classic and new board games.", start_at="2025-09-12T21:00:00Z", end_at="2025-09-12T23:00:00Z", venue="Games Room", tags="chill", lat=30.3570, lng=76.3670),
+            # 2025-12-12: 3 events
+            Event(title="Poetry Slam", description="Share your poetry or listen in.", start_at="2025-12-12T16:00:00Z", end_at="2025-12-12T18:00:00Z", venue="Tan Auditorium", tags="art,chill", lat=30.3565, lng=76.3645),
+            Event(title="Board Games Night", description="Play classic and new board games.", start_at="2025-12-12T21:00:00Z", end_at="2025-12-12T23:00:00Z", venue="Games Room", tags="chill", lat=30.3570, lng=76.3670),
 
-            # 2025-09-15: 2 events
-            Event(title="AI Panel Discussion", description="Panel of experts discuss AI trends.", start_at="2025-09-15T17:00:00Z", end_at="2025-09-15T18:30:00Z", venue="Main Auditorium", tags="tech,productive", lat=30.3558, lng=76.3625),
+            # 2025-12-15: 2 events
+            Event(title="AI Panel Discussion", description="Panel of experts discuss AI trends.", start_at="2025-12-15T17:00:00Z", end_at="2025-12-15T18:30:00Z", venue="Main Auditorium", tags="tech,productive", lat=30.3558, lng=76.3625),
 
-            # 2025-09-20: 1 event
-            Event(title="Late Night Movie", description="Special late night movie screening.", start_at="2025-09-20T23:30:00Z", end_at="2025-09-21T02:00:00Z", venue="Main Auditorium", tags="chill,movie,late-night", lat=30.3558, lng=76.3625),
+            # 2025-12-20: 1 event
+            Event(title="Late Night Movie", description="Special late night movie screening.", start_at="2025-12-20T23:30:00Z", end_at="2025-12-21T02:00:00Z", venue="Main Auditorium", tags="chill,movie,late-night", lat=30.3558, lng=76.3625),
 
-            # 2025-09-22: 2 events
-            Event(title="Science Quiz", description="Test your science knowledge.", start_at="2025-09-22T18:00:00Z", end_at="2025-09-22T19:00:00Z", venue="COS", tags="productive,tech", lat=30.3540, lng=76.3655),
+            # 2025-12-22: 2 events
+            Event(title="Science Quiz", description="Test your science knowledge.", start_at="2025-12-22T18:00:00Z", end_at="2025-12-22T19:00:00Z", venue="COS", tags="productive,tech", lat=30.3540, lng=76.3655),
 
-            # 2025-09-28: 1 event
-            Event(title="Sunset Music Jam", description="Live music as the sun sets.", start_at="2025-09-28T18:00:00Z", end_at="2025-09-28T20:00:00Z", venue="Fete Area", tags="music,chill", lat=30.3580, lng=76.3695),
+            # 2025-12-28: 1 event
+            Event(title="Sunset Music Jam", description="Live music as the sun sets.", start_at="2025-12-28T18:00:00Z", end_at="2025-12-28T20:00:00Z", venue="Fete Area", tags="music,chill", lat=30.3580, lng=76.3695),
         ]
         db.add_all(initial_events)
         db.commit()
@@ -550,11 +551,33 @@ async def create_carpool_group(
     return new_group
 
 @app.get("/events/{event_id}/carpool", response_model=List[CarpoolGroupResponse])
-async def get_carpool_groups(event_id: int, db: Session = Depends(get_db)):
+async def get_carpool_groups(
+    event_id: int, 
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     groups = db.query(CarpoolGroup).filter(CarpoolGroup.event_id == event_id).all()
     for group in groups:
         owner = db.query(User).filter(User.id == group.owner_id).first()
         group.owner_username = owner.username if owner else "Unknown"
+        
+        # If current user is owner, populate members
+        if current_user and current_user.id == group.owner_id:
+            accepted_requests = db.query(CarpoolRequest).filter(
+                CarpoolRequest.group_id == group.id,
+                CarpoolRequest.status == "accepted"
+            ).all()
+            
+            member_list = []
+            for req in accepted_requests:
+                member_user = db.query(User).filter(User.id == req.requester_id).first()
+                if member_user:
+                    member_list.append({
+                        "username": member_user.username,
+                        "email": member_user.email
+                    })
+            group.members = member_list
+            
     return groups
 
 @app.post("/carpool/{group_id}/join")
@@ -638,7 +661,11 @@ async def manage_request(
         raise HTTPException(status_code=403, detail="Not authorized")
         
     if action == "accept":
-        req.status = "accepted"
+        if req.status != "accepted":
+            if group.capacity <= 0:
+                raise HTTPException(status_code=400, detail="Group is full")
+            req.status = "accepted"
+            group.capacity -= 1
         # Optional: decrement capacity? For now just simple status.
     elif action == "reject":
         req.status = "rejected"
