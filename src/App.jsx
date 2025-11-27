@@ -8,6 +8,9 @@ import EventList from './components/EventList';
 import MapView from './components/MapView';
 import ProfilePage from './components/ProfilePage';
 import WelcomeOnboarding from './components/WelcomeOnboarding';
+import LandingPage from './components/LandingPage';
+import LoginPage from './components/LoginPage';
+import SignupPage from './components/SignupPage';
 import { formatDate, formatTime, addToCalendar, Tag } from './lib/utils';
 
 // --- MOCK DATA ---
@@ -48,31 +51,8 @@ const getMapOptions = (theme) => ({
 
 // --- COMPONENTS (Defined outside of App for performance) ---
 
-const SplineScene = () => {
-    useEffect(() => {
-        const scriptId = 'spline-viewer-script';
-        if (document.getElementById(scriptId)) return;
+// SplineScene removed
 
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.type = 'module';
-        script.src = 'https://unpkg.com/@splinetool/viewer@1.0.25/build/spline-viewer.js';
-        document.head.appendChild(script);
-
-        return () => {
-            const existingScript = document.getElementById(scriptId);
-            if (existingScript) {
-                // document.head.removeChild(existingScript);
-            }
-        };
-    }, []);
-
-    return (
-        <div className="absolute top-0 left-0 w-full h-full z-0">
-            <spline-viewer url="https://draft.spline.design/b6NpAoTs9BU03p64/scene.splinecode"></spline-viewer>
-        </div>
-    );
-};
 
 
 // MapView moved to `src/components/MapView.jsx`
@@ -164,136 +144,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
     );
 };
 
-const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setIsLoading(true);
-
-        const formData = new URLSearchParams();
-        formData.append('username', email);
-        formData.append('password', password);
-
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                let errorMessage = 'Failed to log in';
-                if (errorData.detail) {
-                    if (Array.isArray(errorData.detail)) {
-                        errorMessage = errorData.detail.map(err => err.msg).join(', ');
-                    } else {
-                        errorMessage = errorData.detail;
-                    }
-                }
-                throw new Error(errorMessage);
-            }
-
-            const data = await response.json();
-            console.log("Received token:", data.access_token);
-
-            setIsLoggedIn(true);
-            // localStorage.setItem('isLoggedIn', 'true'); // Handled by App useEffect
-            if (data.access_token) {
-                setToken(data.access_token);
-                // localStorage.setItem('token', data.access_token); // Handled by App useEffect
-            }
-            setPage('events');
-
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
-            <div className="w-full max-w-md">
-                <div className="flex justify-center mb-6">
-                    <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
-                </div>
-                <form onSubmit={handleSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Welcome Back!</h2>
-                    {error && <p className="bg-red-100 border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert">{error}</p>}
-                    <div className="mb-4">
-                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="email">Email</label>
-                        <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
-                    </div>
-                    <div className="mb-6">
-                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">Password</label>
-                        <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-purple-800" type="submit" disabled={isLoading}>
-                            {isLoading ? 'Signing In...' : 'Sign In'}
-                        </button>
-                    </div>
-                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Don't have an account? <button type="button" onClick={() => setPage('signup')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Sign Up</button></p>
-                </form>
-            </div>
-        </div>
-    );
-};
-
-const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData }) => {
-    const [email, setEmail] = useState('');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [showOnboardingLocal, setShowOnboardingLocal] = useState(false); // Deprecated
-
-    const handleInitialSubmit = (e) => {
-        e.preventDefault();
-        if (email && username && password) {
-            setOnboardingData({ email, username, password });
-            setShowOnboarding(true);
-        }
-    };
-
-    return (
-        <>
-            <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
-                <div className="w-full max-w-md">
-                    <div className="flex justify-center mb-6">
-                        <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
-                    </div>
-                    <form onSubmit={handleInitialSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
-                        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Create Your Account</h2>
-
-                        <div className="mb-4">
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-email">Email</label>
-                            <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-username">Username</label>
-                            <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-username" type="text" placeholder="cool_student" value={username} onChange={e => setUsername(e.target.value)} required />
-                        </div>
-                        <div className="mb-6">
-                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-password">Password</label>
-                            <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-purple-800" type="submit">
-                                Continue
-                            </button>
-                        </div>
-                        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Already have an account? <button type="button" onClick={() => setPage('login')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Log In</button></p>
-                    </form>
-                </div>
-            </div>
-        </>
-    );
-};
 const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => {
     const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon'];
     const [selectedInterests, setSelectedInterests] = useState([]);
@@ -378,55 +229,8 @@ const EventsContainer = ({ events, setSelectedEvent, isLoading, error, setViewMo
     </main>
 );
 
-const LandingPage = ({ setPage }) => {
-    const [showPwaButton, setShowPwaButton] = React.useState(false);
-    const deferredPromptRef = React.useRef(null);
+// LandingPage moved to src/components/LandingPage.jsx
 
-    React.useEffect(() => {
-        const handler = (e) => {
-            e.preventDefault();
-            deferredPromptRef.current = e;
-            setShowPwaButton(true);
-        };
-        window.addEventListener('beforeinstallprompt', handler);
-        return () => window.removeEventListener('beforeinstallprompt', handler);
-    }, []);
-
-    const handlePwaInstall = () => {
-        if (deferredPromptRef.current) {
-            deferredPromptRef.current.prompt();
-            deferredPromptRef.current.userChoice.then(() => {
-                deferredPromptRef.current = null;
-                setShowPwaButton(false);
-            });
-        }
-    };
-
-    return (
-        <div className="relative flex flex-col items-center justify-end min-h-screen text-center px-4 pb-20">
-            <SplineScene />
-            <div className="relative z-10">
-                <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter">Find Your Vibe</h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl">Never miss out on what's happening on campus. The Loop is your one-stop shop for all college events.</p>
-                {showPwaButton && (
-                    <div className="flex justify-center w-full">
-                        <button
-                            onClick={handlePwaInstall}
-                            className="mt-8 mb-2 flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors duration-300 border-2 border-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                            style={{ animation: 'fadeIn 0.4s' }}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4" /></svg>
-                            Download App
-                        </button>
-                    </div>
-                )}
-                <div className="flex justify-center w-full">
-                    <button onClick={() => setPage('events')} className="mt-4 bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors duration-300">Enter App</button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 
 export default function App() {
@@ -567,7 +371,7 @@ export default function App() {
                 />
             )}
 
-            {location.pathname !== '/' && !showSplash && (
+            {location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/signup' && !showSplash && (
                 <Header
                     setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
                     isLoggedIn={isLoggedIn}
@@ -592,9 +396,9 @@ export default function App() {
                     </div>
                 ) : (
                     <Routes>
-                        <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} />} />
-                        <Route path="/login" element={<LoginPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
-                        <Route path="/signup" element={<SignupPage setPage={page => navigate(`/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
+                        <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
+                        <Route path="/login" element={<LoginPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
+                        <Route path="/signup" element={<SignupPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
                         <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} />} />
                         <Route path="/events" element={
