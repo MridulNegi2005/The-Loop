@@ -7,6 +7,7 @@ import EventCard from './components/EventCard';
 import EventList from './components/EventList';
 import MapView from './components/MapView';
 import ProfilePage from './components/ProfilePage';
+import WelcomeOnboarding from './components/WelcomeOnboarding';
 import { formatDate, formatTime, addToCalendar, Tag } from './lib/utils';
 
 // --- MOCK DATA ---
@@ -245,89 +246,52 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
     );
 };
 
-const SignupPage = ({ setPage, setToken }) => {
+const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData }) => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [showOnboardingLocal, setShowOnboardingLocal] = useState(false); // Deprecated
 
-    const handleSubmit = async (e) => {
+    const handleInitialSubmit = (e) => {
         e.preventDefault();
-        setError(null);
-        setIsLoading(true);
-
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, username, password })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                let errorMessage = 'Failed to sign up';
-                if (errorData.detail) {
-                    if (Array.isArray(errorData.detail)) {
-                        errorMessage = errorData.detail.map(err => err.msg).join(', ');
-                    } else {
-                        errorMessage = errorData.detail;
-                    }
-                }
-                throw new Error(errorMessage);
-            }
-
-            // Auto-login after signup to get token for interest selection
-            const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ username: email, password })
-            });
-
-            if (loginResponse.ok) {
-                const loginData = await loginResponse.json();
-                setToken(loginData.access_token);
-            }
-
-            setPage('interest_selection');
-
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
+        if (email && username && password) {
+            setOnboardingData({ email, username, password });
+            setShowOnboarding(true);
         }
     };
 
     return (
-        <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
-            <div className="w-full max-w-md">
-                <div className="flex justify-center mb-6">
-                    <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
+        <>
+            <div className="container mx-auto px-4 sm:px-6 py-12 flex justify-center">
+                <div className="w-full max-w-md">
+                    <div className="flex justify-center mb-6">
+                        <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16" style={{ background: 'transparent' }} />
+                    </div>
+                    <form onSubmit={handleInitialSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
+                        <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Create Your Account</h2>
+
+                        <div className="mb-4">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-email">Email</label>
+                            <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-username">Username</label>
+                            <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-username" type="text" placeholder="cool_student" value={username} onChange={e => setUsername(e.target.value)} required />
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-password">Password</label>
+                            <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-purple-800" type="submit">
+                                Continue
+                            </button>
+                        </div>
+                        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Already have an account? <button type="button" onClick={() => setPage('login')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Log In</button></p>
+                    </form>
                 </div>
-                <form onSubmit={handleSubmit} className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl shadow-md px-8 pt-6 pb-8 mb-4">
-                    <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Create Your Account</h2>
-                    {error && <p className="bg-red-100 border-red-400 text-red-700 dark:bg-red-900/50 dark:border-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4" role="alert">{error}</p>}
-                    <div className="mb-4">
-                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-email">Email</label>
-                        <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-email" type="email" placeholder="you@college.edu" value={email} onChange={e => setEmail(e.target.value)} required />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-username">Username</label>
-                        <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-username" type="text" placeholder="cool_student" value={username} onChange={e => setUsername(e.target.value)} required />
-                    </div>
-                    <div className="mb-6">
-                        <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="signup-password">Password</label>
-                        <input className="bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white appearance-none rounded w-full py-3 px-4 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-purple-500" id="signup-password" type="password" placeholder="******************" value={password} onChange={e => setPassword(e.target.value)} required />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 disabled:bg-purple-800" type="submit" disabled={isLoading}>
-                            {isLoading ? 'Signing Up...' : 'Sign Up'}
-                        </button>
-                    </div>
-                    <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-6">Already have an account? <button type="button" onClick={() => setPage('login')} className="font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">Log In</button></p>
-                </form>
             </div>
-        </div>
+        </>
     );
 };
 const InterestSelectorPage = ({ setPage, setIsLoggedIn }) => {
@@ -476,6 +440,8 @@ export default function App() {
     const [error, setError] = useState(null);
     const [theme, setTheme] = useState('dark');
     const [showSplash, setShowSplash] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [onboardingData, setOnboardingData] = useState({});
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -590,6 +556,23 @@ export default function App() {
                     .mobile-timeline .mobile-dot { width: auto; height: auto; }
                 }
             `}</style>
+
+            {showOnboarding && (
+                <WelcomeOnboarding
+                    // Pass necessary props. We need to capture these from SignupPage, 
+                    // but since SignupPage is a route, we need a way to pass data up.
+                    // For simplicity, we'll let SignupPage handle the initial inputs and pass them up via state in App if needed,
+                    // OR better yet, let SignupPage render the Onboarding component itself but using a Portal?
+                    // Actually, the plan was to lift state. Let's adjust SignupPage to receive setShowOnboarding.
+                    // But wait, WelcomeOnboarding needs email/username/password.
+                    // Let's pass a "onboardingData" state object to App as well.
+                    {...onboardingData}
+                    setToken={setToken}
+                    setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
+                    onComplete={() => setShowOnboarding(false)}
+                />
+            )}
+
             {location.pathname !== '/' && !showSplash && (
                 <Header
                     setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
@@ -617,7 +600,7 @@ export default function App() {
                     <Routes>
                         <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} />} />
                         <Route path="/login" element={<LoginPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
-                        <Route path="/signup" element={<SignupPage setPage={page => navigate(`/${page}`)} setToken={setToken} />} />
+                        <Route path="/signup" element={<SignupPage setPage={page => navigate(`/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
                         <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} />} />
                         <Route path="/events" element={
