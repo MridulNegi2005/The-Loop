@@ -48,8 +48,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 # --- Security & JWT Setup ---
-# Using bcrypt for password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Using argon2 for password hashing (better compatibility with Python 3.13+)
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 # This key should be stored securely, e.g., in an environment variable.
 # It's used to sign the JWTs.
