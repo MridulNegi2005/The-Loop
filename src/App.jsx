@@ -559,7 +559,15 @@ export default function App() {
 
             {showOnboarding && (
                 <WelcomeOnboarding
-                    // Pass necessary props. We need to capture these from SignupPage, 
+                    {...onboardingData}
+                    setToken={setToken}
+                    setIsLoggedIn={setIsLoggedIn}
+                    setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
+                    onComplete={() => setShowOnboarding(false)}
+                />
+            )}
+
+            {location.pathname !== '/' && !showSplash && (
                 <Header
                     setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
                     isLoggedIn={isLoggedIn}
