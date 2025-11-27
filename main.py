@@ -17,10 +17,12 @@ load_dotenv()
 app = FastAPI()
 
 # CORS Configuration
+# This allows the React frontend (running on a different port) to communicate with the API.
 origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://the-loop-5snj.onrender.com",
+    "http://localhost:3000", # Common port for create-react-app
+    "http://localhost:5173", # Common port for Vite
+    "https://the-loop-5m7u.onrender.com", # Deployed frontend URL
+    "https://the-loop-5snj.onrender.com", # Deployed backend URL (self)
 ]
 
 app.add_middleware(
@@ -234,22 +236,7 @@ def seed_database():
 seed_database()
 
 # --- FastAPI App Initialization ---
-app = FastAPI()
 
-# --- CORS Middleware ---
-# This allows the React frontend (running on a different port) to communicate with the API.
-origins = [
-    "http://localhost:3000", # Common port for create-react-app
-    "http://localhost:5173", # Common port for Vite
-    "https://the-loop-5m7u.onrender.com", # Deployed frontend URL
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # --- API Endpoints ---
 @app.get("/")

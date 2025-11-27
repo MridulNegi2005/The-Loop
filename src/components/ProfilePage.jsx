@@ -32,6 +32,14 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
                     }
                 });
 
+                if (response.status === 401) {
+                    // Token invalid or expired (or user deleted)
+                    setIsLoggedIn(false);
+                    localStorage.removeItem('token');
+                    setPage('login');
+                    return;
+                }
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch profile');
                 }
@@ -45,7 +53,6 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
                 });
             } catch (error) {
                 console.error(error);
-                // Handle error (maybe redirect to login if token invalid)
             } finally {
                 setIsLoading(false);
             }
