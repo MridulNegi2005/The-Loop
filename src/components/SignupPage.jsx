@@ -40,21 +40,21 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
             {/* Floating Icons */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                 {/* Music Note Icon */}
-                <div className="absolute top-[15%] left-[10%] md:left-[5%] md:top-[20%] text-purple-500/30 animate-float">
+                <div className="absolute top-[15%] left-[10%] md:left-[5%] md:top-[20%] text-purple-500 animate-float">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
                 </div>
 
                 {/* Calendar Icon */}
-                <div className="absolute top-[20%] right-[10%] md:right-[5%] md:top-[15%] text-fuchsia-500/30 animate-float-delayed">
+                <div className="absolute top-[20%] right-[10%] md:right-[5%] md:top-[15%] text-fuchsia-500 animate-float-delayed">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 drop-shadow-[0_0_15px_rgba(232,121,249,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </div>
 
                 {/* Map Pin Icon */}
-                <div className="absolute bottom-[25%] left-[15%] md:left-[8%] md:bottom-[20%] text-indigo-500/30 animate-float-slow">
+                <div className="absolute bottom-[25%] left-[15%] md:left-[8%] md:bottom-[20%] text-indigo-500 animate-float-slow">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 drop-shadow-[0_0_15px_rgba(99,102,241,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -62,7 +62,7 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
                 </div>
 
                 {/* Star Icon */}
-                <div className="absolute bottom-[30%] right-[20%] md:right-[10%] md:bottom-[15%] text-purple-400/30 animate-float">
+                <div className="absolute bottom-[30%] right-[20%] md:right-[10%] md:bottom-[15%] text-purple-400 animate-float">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 drop-shadow-[0_0_15px_rgba(192,132,252,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
@@ -81,7 +81,7 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
             </button>
 
             <div className="w-full max-w-lg z-10 px-4">
-                <div className="bg-[#161b22]/60 backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-[0_0_40px_rgba(147,51,234,0.1)] p-8 md:p-10 transform transition-all hover:scale-[1.01] hover:shadow-[0_0_60px_rgba(147,51,234,0.2)]">
+                <div className="bg-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl shadow-[0_0_20px_rgba(147,51,234,0.15)] p-8 md:p-10 transform transition-all hover:scale-[1.01] hover:shadow-[0_0_60px_rgba(147,51,234,0.2)]">
 
                     <div className="flex flex-col items-center mb-8">
                         <div className="w-16 h-16 bg-gradient-to-tr from-fuchsia-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 rotate-[-3deg] hover:rotate-[-6deg] transition-transform duration-300">
