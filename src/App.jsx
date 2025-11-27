@@ -187,7 +187,15 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to log in');
+                let errorMessage = 'Failed to log in';
+                if (errorData.detail) {
+                    if (Array.isArray(errorData.detail)) {
+                        errorMessage = errorData.detail.map(err => err.msg).join(', ');
+                    } else {
+                        errorMessage = errorData.detail;
+                    }
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -258,7 +266,15 @@ const SignupPage = ({ setPage, setToken }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to sign up');
+                let errorMessage = 'Failed to sign up';
+                if (errorData.detail) {
+                    if (Array.isArray(errorData.detail)) {
+                        errorMessage = errorData.detail.map(err => err.msg).join(', ');
+                    } else {
+                        errorMessage = errorData.detail;
+                    }
+                }
+                throw new Error(errorMessage);
             }
 
             // Auto-login after signup to get token for interest selection
