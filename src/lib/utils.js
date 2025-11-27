@@ -43,9 +43,18 @@ export const Tag = ({ text }) => {
     art: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border dark:border-yellow-700',
     fest: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 dark:border dark:border-red-700',
     dance: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 dark:border dark:border-teal-700',
+    dancing: 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 dark:border dark:border-teal-700',
     'late-night': 'bg-gray-200 text-gray-800 dark:bg-gray-700/50 dark:text-gray-300 dark:border dark:border-gray-600',
     workshop: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 dark:border dark:border-orange-700',
     hackathon: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border dark:border-cyan-700',
+    sports: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border dark:border-emerald-700',
+    party: 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 dark:border dark:border-rose-700',
+    clubbing: 'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/50 dark:text-fuchsia-300 dark:border dark:border-fuchsia-700',
+    movie: 'bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300 dark:border dark:border-sky-700',
+    singing: 'bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 dark:border dark:border-lime-700',
+    gaming: 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300 dark:border dark:border-violet-700',
+    food: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 dark:border dark:border-amber-700',
+    comedy: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 dark:border dark:border-orange-700',
     default: 'bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300 dark:border dark:border-gray-700'
   };
   const colorClass = tagColors[text] || tagColors.default;
