@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
 const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [loginMethod, setLoginMethod] = useState('username'); // 'username' or 'email'
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -12,7 +13,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
         setIsLoading(true);
 
         const formData = new URLSearchParams();
-        formData.append('username', email);
+        formData.append('username', identifier);
         formData.append('password', password);
 
         try {
@@ -47,6 +48,12 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const toggleLoginMethod = () => {
+        setLoginMethod(prev => prev === 'username' ? 'email' : 'username');
+        setIdentifier('');
+        setError(null);
     };
 
     return (
@@ -140,7 +147,9 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-purple-200/80 ml-1" htmlFor="email">Email</label>
+                            <label className="text-sm font-medium text-purple-200/80 ml-1" htmlFor="identifier">
+                                {loginMethod === 'username' ? 'Username' : 'Email'}
+                            </label>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,13 +158,22 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
                                 </div>
                                 <input
                                     className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
-                                    id="email"
-                                    type="email"
-                                    placeholder="you@college.edu"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
+                                    id="identifier"
+                                    type={loginMethod === 'username' ? 'text' : 'email'}
+                                    placeholder={loginMethod === 'username' ? 'cooluser123' : 'you@college.edu'}
+                                    value={identifier}
+                                    onChange={e => setIdentifier(e.target.value)}
                                     required
                                 />
+                            </div>
+                            <div className="text-right">
+                                <button
+                                    type="button"
+                                    onClick={toggleLoginMethod}
+                                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline decoration-purple-400/30 hover:decoration-purple-300"
+                                >
+                                    {loginMethod === 'username' ? 'Log in with Email' : 'Log in with Username'}
+                                </button>
                             </div>
                         </div>
 

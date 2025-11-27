@@ -58,6 +58,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="users/login", auto_error=False)
 
 # --- Security Helper Functions ---
 def verify_password(plain_password, hashed_password):
@@ -77,6 +78,21 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 # --- SQLAlchemy Models (Database Tables) ---
+
+# Association table for User-Event (Many-to-Many)
+class UserEvent(Base):
+    __tablename__ = "user_events"
+    user_id = Column(Integer, primary_key=True)
+    event_id = Column(Integer, primary_key=True)
+
+# Table to store user interest scores
+class UserInterest(Base):
+    __tablename__ = "user_interests"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    interest = Column(String, index=True)
+    score = Column(Float, default=1.0) # Default weight
+
 # Represents the 'users' table in the database.
 class User(Base):
     __tablename__ = "users"
@@ -86,7 +102,9 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
-    interests = Column(String, default="") # Comma-separated string of interests
+    # interests column is kept for backward compatibility/initial selection, 
+    # but UserInterest table is the source of truth for weights.
+    interests = Column(String, default="") 
 
 # Represents the 'events' table in the database.
 class Event(Base):
@@ -116,8 +134,11 @@ class EventSchema(BaseModel):
     tags: List[str] # The API will return tags as a list of strings
     lat: float
     lng: float
+    match_score: Optional[float] = 0.0 # Added match_score
+    match_percentage: Optional[int] = 0 # Added match_percentage
+    is_joined: Optional[bool] = False # Added is_joined status
     class Config:
-        orm_mode = True # Allows Pydantic to read data from ORM models
+        orm_mode = True
 
 # Defines the shape for creating a new user.
 class UserCreate(BaseModel):
@@ -171,6 +192,20 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
+    return user
+
+async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme_optional), db: Session = Depends(get_db)):
+    """Returns the current user if authenticated, else None."""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            return None
+    except JWTError:
+        return None
+    user = db.query(User).filter(User.email == email).first()
     return user
 
 # --- Database Seeding Function ---
@@ -235,27 +270,131 @@ def seed_database():
 # Run the seeding function on startup
 seed_database()
 
-# --- FastAPI App Initialization ---
-
-
 # --- API Endpoints ---
 @app.get("/")
-async def root():
-    """A simple root endpoint to check if the API is running."""
-    return {"message": "Event Aggregator API is running!"}
+def read_root():
+    return {"Hello": "World", "DB_URL": SQLALCHEMY_DATABASE_URL.split("@")[1] if "@" in SQLALCHEMY_DATABASE_URL else "SQLite"}
 
 @app.head("/")
 async def root_head():
     return
 
+import math # Ensure math is imported
+
 @app.get("/events", response_model=List[EventSchema])
-async def get_all_events(db: Session = Depends(get_db)):
-    """Fetches all events from the database."""
+async def get_all_events(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional) # Use optional auth
+):
+    """Fetches all events from the database with recommendation scores (Cosine Similarity)."""
     db_events = db.query(Event).all()
-    # Convert the comma-separated tags string into a list for the response
+    
+    # Get user interests and joined events if logged in
+    user_interests = {}
+    joined_event_ids = set()
+    user_magnitude = 0.0
+    
+    if current_user:
+        # Fetch weighted interests
+        db_interests = db.query(UserInterest).filter(UserInterest.user_id == current_user.id).all()
+        sum_sq = 0.0
+        for ui in db_interests:
+            user_interests[ui.interest] = ui.score
+            sum_sq += ui.score * ui.score
+        user_magnitude = math.sqrt(sum_sq)
+            
+        # Fetch joined events
+        joined = db.query(UserEvent).filter(UserEvent.user_id == current_user.id).all()
+        joined_event_ids = {je.event_id for je in joined}
+
+    results = []
     for event in db_events:
-        event.tags = event.tags.split(',') if event.tags else []
-    return db_events
+        tags = event.tags.split(',') if event.tags else []
+        
+        # Calculate Cosine Similarity
+        match_percentage = 0
+        score = 0.0 # Keep raw score for sorting backup or debugging
+        
+        if current_user and user_magnitude > 0 and tags:
+            dot_product = 0.0
+            # Event vector magnitude (assuming binary weight 1.0 for each tag present)
+            # Magnitude = sqrt(1^2 + 1^2 + ... + 1^2) = sqrt(count(tags))
+            event_magnitude = math.sqrt(len(tags))
+            
+            for tag in tags:
+                # User score for this tag * Event weight (1.0)
+                dot_product += user_interests.get(tag, 0.0) * 1.0
+            
+            if event_magnitude > 0:
+                similarity = dot_product / (user_magnitude * event_magnitude)
+                match_percentage = int(similarity * 100)
+                score = similarity # Use similarity as the primary sort score
+        
+        # Create response object
+        event_resp = EventSchema(
+            id=event.id,
+            title=event.title,
+            description=event.description,
+            start_at=event.start_at,
+            end_at=event.end_at,
+            venue=event.venue,
+            tags=tags,
+            lat=event.lat,
+            lng=event.lng,
+            match_score=score, # This is now the similarity score (0.0 to 1.0)
+            match_percentage=match_percentage, # New field (0 to 100)
+            is_joined=(event.id in joined_event_ids)
+        )
+        results.append(event_resp)
+        
+    # Sort by match_percentage descending
+    results.sort(key=lambda x: x.match_percentage, reverse=True)
+    
+    return results
+
+@app.post("/events/{event_id}/join")
+async def join_event(
+    event_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    """Allows a user to join an event and updates their interest weights."""
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+        
+    # Check if already joined
+    existing = db.query(UserEvent).filter(
+        UserEvent.user_id == current_user.id, 
+        UserEvent.event_id == event_id
+    ).first()
+    
+    if existing:
+        return {"message": "Already joined this event"}
+        
+    # Join event
+    new_join = UserEvent(user_id=current_user.id, event_id=event_id)
+    db.add(new_join)
+    
+    # Update interest weights
+    # "Bump" the interests associated with this event
+    tags = event.tags.split(',') if event.tags else []
+    for tag in tags:
+        user_interest = db.query(UserInterest).filter(
+            UserInterest.user_id == current_user.id,
+            UserInterest.interest == tag
+        ).first()
+        
+        if user_interest:
+            user_interest.score += 1.0 # Increase weight
+        else:
+            # New interest discovered via event
+            new_interest = UserInterest(user_id=current_user.id, interest=tag, score=1.5) # Start with a bump
+            db.add(new_interest)
+            
+    db.commit()
+    return {"message": "Successfully joined event", "event_title": event.title}
 
 @app.post("/users/signup", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -303,7 +442,27 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 @app.put("/users/me", response_model=UserSchema)
 async def update_user_me(user_update: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user_update.interests is not None:
+        # Update the legacy string column
         current_user.interests = ",".join(user_update.interests)
+        
+        # Update the weighted interests table
+        # Ensure selected interests exist with at least base weight (5.0).
+        # Do NOT reset existing higher scores.
+        
+        for interest in user_update.interests:
+            ui = db.query(UserInterest).filter(
+                UserInterest.user_id == current_user.id,
+                UserInterest.interest == interest
+            ).first()
+            if not ui:
+                # New manual interest
+                new_ui = UserInterest(user_id=current_user.id, interest=interest, score=5.0)
+                db.add(new_ui)
+            else:
+                # Existing, ensure it has at least base weight
+                if ui.score < 5.0:
+                    ui.score = 5.0
+                    
     if user_update.first_name is not None:
         current_user.first_name = user_update.first_name
     if user_update.last_name is not None:

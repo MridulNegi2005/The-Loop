@@ -2,8 +2,28 @@ import React from 'react';
 import { formatDate, formatTime, Tag } from '../lib/utils';
 
 export default function EventCard({ event, onSelect }) {
+    const score = event.match_percentage || 0;
+    const isJoined = event.is_joined;
+
     return (
-        <button onClick={onSelect} className="h-full w-full text-left block bg-white dark:bg-[#161b22] rounded-xl border border-gray-200 dark:border-purple-800/50 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-purple-600/10 dark:hover:border-purple-500 hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col">
+        <button onClick={onSelect} className="h-full w-full text-left block bg-white dark:bg-[#161b22] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-purple-600/20 dark:hover:border-purple-500 hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col relative">
+            {isJoined && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                    Joined
+                </div>
+            )}
+            {/* Compatibility Bar - Option 2 (Neon Gradients) */}
+            {score > 0 && !isJoined && (
+                <div className="absolute bottom-0 left-0 w-full h-1.5 bg-gray-100 dark:bg-gray-800">
+                    <div
+                        className={`h-full ${score >= 90 ? 'bg-gradient-to-r from-yellow-400 via-yellow-300 to-lime-400 shadow-[0_0_15px_rgba(250,204,21,0.8)]' :
+                                score >= 70 ? 'bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500 shadow-[0_0_15px_rgba(168,85,247,0.8)]' :
+                                    'bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-500 shadow-[0_0_15px_rgba(34,211,238,0.8)]'
+                            } transition-all duration-1000 ease-out`}
+                        style={{ width: `${score}%` }}
+                    />
+                </div>
+            )}
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <div className="flex justify-between items-start">

@@ -98,6 +98,42 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
         setReminded(r => !r);
         // Here you could add notification/cookie logic
     };
+
+    // Join/Interested Logic
+    const [isJoined, setIsJoined] = React.useState(event.is_joined);
+    const [isJoining, setIsJoining] = React.useState(false);
+
+    const handleJoin = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Please log in to join events.");
+            navigate('/login');
+            return;
+        }
+        setIsJoining(true);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${event.id}/join`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                setIsJoined(true);
+                // Ideally, we should also update the global events state or re-fetch, 
+                // but for now local state update gives immediate feedback.
+            } else {
+                const data = await response.json();
+                alert(data.detail || "Failed to join event.");
+            }
+        } catch (e) {
+            console.error("Join failed", e);
+            alert("Could not connect to server.");
+        } finally {
+            setIsJoining(false);
+        }
+    };
+
     return (
         <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
             <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl overflow-hidden shadow-lg">
@@ -125,17 +161,33 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme }) => {
                             <div className="border-b border-gray-200 dark:border-purple-700/50 pb-2 mb-2 w-full text-center">
                                 <span className="text-lg font-semibold text-purple-700 dark:text-purple-300">Event Actions</span>
                             </div>
-                            <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-2 bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300 w-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
-                            <button onClick={handleRemindMe} className={`flex items-center justify-center gap-2 ${reminded ? 'bg-purple-800' : 'bg-purple-500'} text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300 w-full`}>
+
+                            <button
+                                onClick={handleJoin}
+                                disabled={isJoined || isJoining}
+                                className={`flex items-center justify-center gap-2 font-bold py-3 px-4 rounded-lg transition-colors duration-300 w-full ${isJoined ? 'bg-green-600 text-white cursor-default' : 'bg-purple-600 text-white hover:bg-purple-700'}`}
+                            >
+                                {isJoining ? (
+                                    <span>Joining...</span>
+                                ) : isJoined ? (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        <span>Interested (Joined)</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                        <span>Interested</span>
+                                    </>
+                                )}
+                            </button>
+
+                            <button onClick={() => addToCalendar(event)} className="flex items-center justify-center gap-2 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors duration-300 w-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Add to Calendar</button>
+                            <button onClick={handleRemindMe} className={`flex items-center justify-center gap-2 ${reminded ? 'bg-purple-800' : 'bg-gray-200 dark:bg-slate-700'} ${reminded ? 'text-white' : 'text-gray-800 dark:text-white'} font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-colors duration-300 w-full`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 7.165 6 9.388 6 12v2.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                                 {reminded ? 'Remind Me (Set!)' : 'Remind Me'}
                             </button>
-                            <button onClick={handleShare} className="flex items-center justify-center gap-2 bg-purple-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-300 w-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm-6 8a6 6 0 1112 0H9z" /></svg>Share</button>
-                            {/* Suggestions for filling empty space: */}
-                            {/* 1. Show a countdown timer to event start */}
-                            {/* 2. Show a list of similar/upcoming events */}
-                            {/* 3. Add a fun event-related quote or fact */}
-                            {/* 4. Show a QR code for sharing the event */}
+                            <button onClick={handleShare} className="flex items-center justify-center gap-2 bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors duration-300 w-full"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 8a3 3 0 11-6 0 3 3 0 016 0zm-6 8a6 6 0 1112 0H9z" /></svg>Share</button>
                         </div>
                     </div>
                 </div>
@@ -279,7 +331,13 @@ export default function App() {
     React.useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/events`);
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/events`, {
+                    headers: headers
+                });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 setEvents(data);
@@ -292,7 +350,7 @@ export default function App() {
             }
         };
         fetchEvents();
-    }, []);
+    }, [token]);
 
     // Load Google Maps script when needed
     React.useEffect(() => {

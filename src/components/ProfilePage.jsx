@@ -203,11 +203,11 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
                             ) : (
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                        <div className="bg-gray-50/50 dark:bg-slate-800/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-purple-600/10 dark:hover:border-purple-500 hover:-translate-y-1">
+                                        <div className="bg-gray-50/50 dark:bg-slate-800/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700/50 transition-all duration-300 ease-in-out">
                                             <h3 className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-semibold mb-1">First Name</h3>
                                             <p className="text-lg text-gray-900 dark:text-white font-medium">{user.first_name || <span className="text-gray-400 italic">Not set</span>}</p>
                                         </div>
-                                        <div className="bg-gray-50/50 dark:bg-slate-800/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700/50 transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-purple-600/10 dark:hover:border-purple-500 hover:-translate-y-1">
+                                        <div className="bg-gray-50/50 dark:bg-slate-800/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700/50 transition-all duration-300 ease-in-out">
                                             <h3 className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-semibold mb-1">Last Name</h3>
                                             <p className="text-lg text-gray-900 dark:text-white font-medium">{user.last_name || <span className="text-gray-400 italic">Not set</span>}</p>
                                         </div>
