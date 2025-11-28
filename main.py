@@ -205,6 +205,9 @@ class UserUpdate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    is_new_user: Optional[bool] = False
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 # Carpool Schemas
 class CarpoolGroupCreate(BaseModel):
@@ -515,8 +518,10 @@ async def google_login(login_data: GoogleLogin, db: Session = Depends(get_db)):
         
         # Check if user exists
         user = db.query(User).filter(User.email == email).first()
+        is_new_user = False
         
         if not user:
+            is_new_user = True
             # Create new user
             username = email.split('@')[0]
             # Ensure username is unique
@@ -539,7 +544,13 @@ async def google_login(login_data: GoogleLogin, db: Session = Depends(get_db)):
             db.refresh(user)
             
         access_token = create_access_token(data={"sub": user.email})
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token, 
+            "token_type": "bearer",
+            "is_new_user": is_new_user,
+            "first_name": user.first_name,
+            "last_name": user.last_name
+        }
         
     except ValueError as e:
         print(f"Google Token Verification Error: {e}")

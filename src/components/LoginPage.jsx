@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 
-const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
+const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnboardingData }) => {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
@@ -71,7 +71,18 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
             if (data.access_token) {
                 setToken(data.access_token);
             }
-            setPage('events');
+
+            if (data.is_new_user) {
+                // Trigger onboarding for new Google users
+                setOnboardingData({
+                    firstName: data.first_name || '',
+                    lastName: data.last_name || '',
+                    isGoogle: true
+                });
+                setShowOnboarding(true);
+            } else {
+                setPage('events');
+            }
         } catch (err) {
             setError(err.message);
         } finally {

@@ -470,6 +470,7 @@ export default function App() {
                 <WelcomeOnboarding
                     {...onboardingData}
                     setToken={setToken}
+                    token={token}
                     setIsLoggedIn={setIsLoggedIn}
                     setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)}
                     onComplete={() => setShowOnboarding(false)}
@@ -502,7 +503,7 @@ export default function App() {
                 ) : (
                     <Routes>
                         <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
-                        <Route path="/login" element={<LoginPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
+                        <Route path="/login" element={<LoginPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/signup" element={<SignupPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />

@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const WelcomeOnboarding = ({ email, username, password, setToken, setIsLoggedIn, setPage, onComplete }) => {
+const WelcomeOnboarding = ({ email, username, password, setToken, setIsLoggedIn, setPage, onComplete, firstName: initialFirstName, lastName: initialLastName, isGoogle, token }) => {
     const [step, setStep] = useState('name'); // name, interests, processing, success
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
+    const [firstName, setFirstName] = useState(initialFirstName || '');
+    const [lastName, setLastName] = useState(initialLastName || '');
     const [selectedInterests, setSelectedInterests] = useState([]);
     const [error, setError] = useState(null);
 
     const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon'];
+
+    useEffect(() => {
+        if (initialFirstName) setFirstName(initialFirstName);
+        if (initialLastName) setLastName(initialLastName);
+    }, [initialFirstName, initialLastName]);
 
     const toggleInterest = (interest) => {
         setSelectedInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]);
@@ -26,40 +31,44 @@ const WelcomeOnboarding = ({ email, username, password, setToken, setIsLoggedIn,
         setError(null);
 
         try {
-            // 1. Sign Up
-            const signupResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, username, password })
-            });
+            let authToken = token;
 
-            if (!signupResponse.ok) {
-                const errorData = await signupResponse.json();
-                throw new Error(errorData.detail || 'Failed to sign up');
+            if (!isGoogle) {
+                // 1. Sign Up
+                const signupResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, username, password })
+                });
+
+                if (!signupResponse.ok) {
+                    const errorData = await signupResponse.json();
+                    throw new Error(errorData.detail || 'Failed to sign up');
+                }
+
+                // 2. Login
+                const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ username: email, password })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error('Failed to log in automatically');
+                }
+
+                const loginData = await loginResponse.json();
+                authToken = loginData.access_token;
+                setToken(authToken);
+                setIsLoggedIn(true);
             }
-
-            // 2. Login
-            const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ username: email, password })
-            });
-
-            if (!loginResponse.ok) {
-                throw new Error('Failed to log in automatically');
-            }
-
-            const loginData = await loginResponse.json();
-            const token = loginData.access_token;
-            setToken(token);
-            setIsLoggedIn(true);
 
             // 3. Update Profile (Name & Interests)
             await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${authToken}`
                 },
                 body: JSON.stringify({
                     first_name: firstName,
