@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
     const [identifier, setIdentifier] = useState('');
@@ -17,14 +18,26 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
         formData.append('password', password);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
+            const loginUrl = `${import.meta.env.VITE_API_URL}/users/login`;
+            console.log("Attempting login to:", loginUrl);
+
+            const response = await fetch(loginUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData
             });
 
+            const text = await response.text();
+            console.log("Login response body:", text);
+
             if (!response.ok) {
-                const errorData = await response.json();
+                let errorData;
+                try {
+                    errorData = JSON.parse(text);
+                } catch (e) {
+                    throw new Error(`Login failed (${response.status}): ${text}`);
+                }
+
                 let errorMessage = 'Failed to log in';
                 if (errorData.detail) {
                     if (Array.isArray(errorData.detail)) {
@@ -36,7 +49,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
                 throw new Error(errorMessage);
             }
 
-            const data = await response.json();
+            const data = JSON.parse(text);
             setIsLoggedIn(true);
             if (data.access_token) {
                 setToken(data.access_token);
@@ -48,6 +61,37 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: credentialResponse.credential })
+            });
+
+            if (!response.ok) {
+                throw new Error('Google login failed');
+            }
+
+            const data = await response.json();
+            setIsLoggedIn(true);
+            if (data.access_token) {
+                setToken(data.access_token);
+            }
+            setPage('events');
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleFailure = () => {
+        setError("Google Sign In was unsuccessful. Try again later.");
     };
 
     const toggleLoginMethod = () => {
@@ -180,7 +224,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center ml-1">
                                 <label className="text-sm font-medium text-purple-200/80" htmlFor="password">Password</label>
-                                <button type="button" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Forgot?</button>
+                                <button type="button" onClick={() => setPage('forgot-password')} className="text-xs text-purple-400 hover:text-purple-300 transition-colors">Forgot?</button>
                             </div>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -215,6 +259,21 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
                                 </span>
                             ) : 'Sign In'}
                         </button>
+
+                        <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-gray-600"></div>
+                            <span className="flex-shrink-0 mx-4 text-gray-400 text-xs">Or continue with</span>
+                            <div className="flex-grow border-t border-gray-600"></div>
+                        </div>
+
+                        <div className="flex justify-center w-full">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={handleGoogleFailure}
+                                theme="filled_black"
+                                shape="pill"
+                            />
+                        </div>
                     </form>
 
                     <div className="mt-8 text-center">

@@ -12,6 +12,8 @@ import WelcomeOnboarding from './components/WelcomeOnboarding';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import { formatDate, formatTime, addToCalendar, Tag } from './lib/utils';
 
 // --- MOCK DATA ---
@@ -501,9 +503,12 @@ export default function App() {
                     <Routes>
                         <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
                         <Route path="/login" element={<LoginPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/signup" element={<SignupPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
                         <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} />} />
+                        <Route path="/friends" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="friends" />} />
                         <Route path="/events" element={
                             <EventsContainer
                                 events={events}

@@ -1,11 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, WebSocket, WebSocketDisconnect, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, or_, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -137,6 +137,24 @@ class CarpoolRequest(Base):
     requester_id = Column(Integer, index=True)
     status = Column(String, default="pending") # pending, accepted, rejected
 
+# Friend Request Model
+class FriendRequest(Base):
+    __tablename__ = "friend_requests"
+    id = Column(Integer, primary_key=True, index=True)
+    requester_id = Column(Integer, ForeignKey("users.id"), index=True)
+    receiver_id = Column(Integer, ForeignKey("users.id"), index=True)
+    status = Column(String, default="pending") # pending, accepted, rejected
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+# Chat Message Model
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"), index=True)
+    receiver_id = Column(Integer, ForeignKey("users.id"), index=True)
+    content = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
 # Create the database tables if they don't exist
 Base.metadata.create_all(bind=engine)
 
@@ -211,6 +229,35 @@ class CarpoolRequestResponse(BaseModel):
     requester_username: Optional[str] = None
     group_location: Optional[str] = None
     event_title: Optional[str] = None
+    class Config:
+        orm_mode = True
+
+class FriendRequestResponse(BaseModel):
+    id: int
+    requester_id: int
+    receiver_id: int
+    status: str
+    created_at: datetime
+    requester_username: Optional[str] = None
+    receiver_username: Optional[str] = None
+    class Config:
+        orm_mode = True
+
+class FriendResponse(BaseModel):
+    id: int
+    username: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: str
+    class Config:
+        orm_mode = True
+
+class ChatMessageResponse(BaseModel):
+    id: int
+    sender_id: int
+    receiver_id: int
+    content: str
+    timestamp: datetime
     class Config:
         orm_mode = True
 
@@ -472,7 +519,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     FastAPI's OAuth2PasswordRequestForm expects 'username' and 'password' fields.
     We'll map our 'email' to 'username' on the frontend.
     """
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(or_(User.email == form_data.username, User.username == form_data.username)).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -650,6 +697,216 @@ async def manage_request(
         
     db.commit()
     return {"message": f"Request {action}ed"}
+
+# --- Friends System Endpoints ---
+
+@app.post("/friends/request/{user_id}")
+async def send_friend_request(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot send friend request to yourself")
+    
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if request already exists (in either direction)
+    existing = db.query(FriendRequest).filter(
+        or_(
+            and_(FriendRequest.requester_id == current_user.id, FriendRequest.receiver_id == user_id),
+            and_(FriendRequest.requester_id == user_id, FriendRequest.receiver_id == current_user.id)
+        )
+    ).first()
+
+    if existing:
+        if existing.status == "accepted":
+            return {"message": "You are already friends"}
+        if existing.status == "pending":
+            return {"message": "Friend request already pending"}
+        # If rejected, we might allow re-sending, but for now let's say "Request already exists"
+        return {"message": "Friend request already exists"}
+
+    new_request = FriendRequest(requester_id=current_user.id, receiver_id=user_id)
+    db.add(new_request)
+    db.commit()
+    return {"message": "Friend request sent"}
+
+@app.post("/friends/respond/{request_id}/{action}")
+async def respond_friend_request(
+    request_id: int,
+    action: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    req = db.query(FriendRequest).filter(FriendRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    if req.receiver_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to respond to this request")
+
+    if action == "accept":
+        req.status = "accepted"
+    elif action == "reject":
+        req.status = "rejected"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+
+    db.commit()
+    return {"message": f"Friend request {action}ed"}
+
+@app.get("/friends/requests/received", response_model=List[FriendRequestResponse])
+async def get_friend_requests_received(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    requests = db.query(FriendRequest).filter(
+        FriendRequest.receiver_id == current_user.id,
+        FriendRequest.status == "pending"
+    ).all()
+    
+    for req in requests:
+        requester = db.query(User).filter(User.id == req.requester_id).first()
+        req.requester_username = requester.username if requester else "Unknown"
+        
+    return requests
+
+@app.get("/friends/requests/sent", response_model=List[FriendRequestResponse])
+async def get_friend_requests_sent(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    requests = db.query(FriendRequest).filter(
+        FriendRequest.requester_id == current_user.id,
+        FriendRequest.status == "pending"
+    ).all()
+    
+    for req in requests:
+        receiver = db.query(User).filter(User.id == req.receiver_id).first()
+        req.receiver_username = receiver.username if receiver else "Unknown"
+        
+    return requests
+
+@app.get("/friends", response_model=List[FriendResponse])
+async def get_friends(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # Find all accepted requests where user is either requester or receiver
+    friendships = db.query(FriendRequest).filter(
+        or_(
+            FriendRequest.requester_id == current_user.id,
+            FriendRequest.receiver_id == current_user.id
+        ),
+        FriendRequest.status == "accepted"
+    ).all()
+
+    friends = []
+    for f in friendships:
+        friend_id = f.receiver_id if f.requester_id == current_user.id else f.requester_id
+        friend = db.query(User).filter(User.id == friend_id).first()
+        if friend:
+            friends.append(friend)
+    
+    return friends
+
+@app.get("/users/search", response_model=List[FriendResponse])
+async def search_users(query: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not query:
+        return []
+    users = db.query(User).filter(User.username.ilike(f"%{query}%"), User.id != current_user.id).limit(10).all()
+    return users
+
+# --- Chat System ---
+
+@app.get("/chat/history/{friend_id}", response_model=List[ChatMessageResponse])
+async def get_chat_history(
+    friend_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    messages = db.query(ChatMessage).filter(
+        or_(
+            and_(ChatMessage.sender_id == current_user.id, ChatMessage.receiver_id == friend_id),
+            and_(ChatMessage.sender_id == friend_id, ChatMessage.receiver_id == current_user.id)
+        )
+    ).order_by(ChatMessage.timestamp.asc()).all()
+    return messages
+
+# WebSocket Connection Manager
+class ConnectionManager:
+    def __init__(self):
+        # Map user_id to list of active websocket connections (allowing multiple tabs)
+        self.active_connections: Dict[int, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, user_id: int):
+        await websocket.accept()
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, user_id: int):
+        if user_id in self.active_connections:
+            if websocket in self.active_connections[user_id]:
+                self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
+
+    async def send_personal_message(self, message: dict, user_id: int):
+        if user_id in self.active_connections:
+            for connection in self.active_connections[user_id]:
+                await connection.send_json(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/chat/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int, token: str = Query(...), db: Session = Depends(get_db)):
+    # Verify token
+    # Note: In a real app, you'd want a more robust way to auth websockets, 
+    # but passing token in query param is a common simple pattern.
+    email = None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user or user.id != client_id:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await manager.connect(websocket, user.id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            # data should contain { "receiver_id": int, "content": str }
+            receiver_id = data.get("receiver_id")
+            content = data.get("content")
+            
+            if receiver_id and content:
+                # Save to DB
+                # Note: creating a new session here because the dependency one might be closed or not thread-safe in the loop? 
+                # Actually Depends(get_db) works for the initial setup, but for the loop we might need a fresh session or use the existing one carefully.
+                # Ideally, we should use `async with SessionLocal() as session:` but our SessionLocal is sync.
+                # For this simple implementation, we'll use the `db` session passed in, but we need to be careful about commits.
+                
+                new_msg = ChatMessage(sender_id=user.id, receiver_id=receiver_id, content=content)
+                db.add(new_msg)
+                db.commit()
+                db.refresh(new_msg)
+                
+                response_data = {
+                    "id": new_msg.id,
+                    "sender_id": user.id,
+                    "receiver_id": receiver_id,
+                    "content": content,
+                    "timestamp": new_msg.timestamp.isoformat()
+                }
+                
+                # Send to receiver
+                await manager.send_personal_message(response_data, receiver_id)
+                # Send back to sender (so they see it confirmed/echoed)
+                await manager.send_personal_message(response_data, user.id)
+                
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, user.id)
+
 
 # --- How to Run ---
 # 1. Make sure you have the required libraries:

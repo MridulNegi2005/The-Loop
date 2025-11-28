@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './index.css';
@@ -28,7 +29,7 @@ function showPwaUpdateToast() {
   if (document.getElementById('pwa-update-toast')) return;
   const toast = document.createElement('div');
   toast.id = 'pwa-update-toast';
-    toast.innerHTML = `
+  toast.innerHTML = `
       <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232136;color:#fff;padding:10px 18px;border-radius:14px;box-shadow:0 2px 12px #7c3aed33;z-index:9999;display:flex;align-items:center;gap:10px;font-size:0.98rem;min-width:220px;max-width:90vw;">
         <svg style="width:20px;height:20px;flex-shrink:0;" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="#a78bfa" stroke-width="2" fill="#7c3aed"/><path d="M12 8v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="#fff"/></svg>
         <span style="font-weight:500;">New version available.</span>
@@ -43,8 +44,14 @@ function showPwaUpdateToast() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    {console.log("--- GOOGLE AUTH DEBUG ---")}
+    {console.log("Client ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID)}
+    {console.log("Origin:", window.location.origin)}
+    {console.log("-------------------------")}
     <BrowserRouter>
-      <App />
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <App />
+      </GoogleOAuthProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
