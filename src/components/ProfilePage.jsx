@@ -84,6 +84,9 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
             fetchRequests();
         } else if (activeTab === 'friends') {
             fetchFriendsData();
+            // Auto-refresh every 5 seconds
+            const intervalId = setInterval(fetchFriendsData, 5000);
+            return () => clearInterval(intervalId);
         }
     }, [activeTab]);
 

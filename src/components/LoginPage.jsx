@@ -18,25 +18,14 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
         formData.append('password', password);
 
         try {
-            const loginUrl = `${import.meta.env.VITE_API_URL}/users/login`;
-            console.log("Attempting login to:", loginUrl);
-
-            const response = await fetch(loginUrl, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData
             });
 
-            const text = await response.text();
-            console.log("Login response body:", text);
-
             if (!response.ok) {
-                let errorData;
-                try {
-                    errorData = JSON.parse(text);
-                } catch (e) {
-                    throw new Error(`Login failed (${response.status}): ${text}`);
-                }
+                const errorData = await response.json();
 
                 let errorMessage = 'Failed to log in';
                 if (errorData.detail) {
@@ -49,7 +38,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken }) => {
                 throw new Error(errorMessage);
             }
 
-            const data = JSON.parse(text);
+            const data = await response.json();
             setIsLoggedIn(true);
             if (data.access_token) {
                 setToken(data.access_token);

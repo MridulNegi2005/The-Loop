@@ -730,7 +730,14 @@ async def send_friend_request(
             return {"message": "You are already friends"}
         if existing.status == "pending":
             return {"message": "Friend request already pending"}
-        # If rejected, we might allow re-sending, but for now let's say "Request already exists"
+        if existing.status == "rejected":
+            # Allow re-sending: reset to pending and update requester
+            existing.status = "pending"
+            existing.requester_id = current_user.id
+            existing.receiver_id = user_id
+            db.commit()
+            return {"message": "Friend request sent"}
+        
         return {"message": "Friend request already exists"}
 
     new_request = FriendRequest(requester_id=current_user.id, receiver_id=user_id)
