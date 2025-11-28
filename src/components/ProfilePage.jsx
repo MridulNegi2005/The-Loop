@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tag } from '../lib/utils';
-import { Check, X, Clock, MapPin, UserPlus, MessageCircle, Search, Send, Minimize2 } from 'lucide-react';
+import { Check, X, UserPlus, MessageCircle, Search } from 'lucide-react';
 
 import MobileProfileView from './MobileProfileView';
 
-export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'profile' }) {
+export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'profile', chatSystem }) {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
@@ -17,20 +17,22 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
     const [requestsReceived, setRequestsReceived] = useState([]);
     const [requestsSent, setRequestsSent] = useState([]);
 
-    // Friends System State
-    const [friends, setFriends] = useState([]);
-    const [friendRequests, setFriendRequests] = useState([]); // Received
-    const [sentFriendRequests, setSentFriendRequests] = useState([]);
-    const [userSearchQuery, setUserSearchQuery] = useState('');
-    const [userSearchResults, setUserSearchResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-
-    // Chat System State
-    const [activeChatFriend, setActiveChatFriend] = useState(null);
-    const [chatMessages, setChatMessages] = useState([]);
-    const [chatInput, setChatInput] = useState('');
-    const [ws, setWs] = useState(null);
-    const messagesEndRef = useRef(null);
+    // Destructure Chat System
+    const {
+        friends,
+        friendRequests,
+        sentFriendRequests,
+        activeChatFriend,
+        setActiveChatFriend,
+        userSearchQuery,
+        setUserSearchQuery,
+        userSearchResults,
+        isSearching,
+        fetchFriendsData,
+        searchUsers,
+        sendFriendRequest,
+        respondToFriendRequest
+    } = chatSystem;
 
     const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon'];
 
@@ -84,55 +86,10 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
             fetchRequests();
         } else if (activeTab === 'friends') {
             fetchFriendsData();
-            // Auto-refresh every 5 seconds
-            const intervalId = setInterval(fetchFriendsData, 5000);
-            return () => clearInterval(intervalId);
+            // Auto-refresh handled by hook, but we can trigger one now
         }
-    }, [activeTab]);
+    }, [activeTab, fetchFriendsData]);
 
-    // Chat WebSocket & History
-    useEffect(() => {
-        if (activeChatFriend && user) {
-            // Fetch history
-            fetchChatHistory(activeChatFriend.id);
-
-            // Connect WS
-            const token = localStorage.getItem('token');
-            const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'; // Fallback
-            const socket = new WebSocket(`${wsUrl}/ws/chat/${user.id}?token=${token}`);
-
-            socket.onopen = () => {
-                console.log("Connected to Chat WS");
-            };
-
-            socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                // Only add if it belongs to this conversation
-                if ((msg.sender_id === activeChatFriend.id && msg.receiver_id === user.id) ||
-                    (msg.sender_id === user.id && msg.receiver_id === activeChatFriend.id)) {
-                    setChatMessages(prev => {
-                        // Avoid duplicates if we already added it optimistically (though we aren't doing that yet)
-                        if (prev.some(m => m.id === msg.id)) return prev;
-                        return [...prev, msg];
-                    });
-                }
-            };
-
-            socket.onclose = () => {
-                console.log("Disconnected from Chat WS");
-            };
-
-            setWs(socket);
-
-            return () => {
-                socket.close();
-            };
-        }
-    }, [activeChatFriend, user]);
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [chatMessages, activeChatFriend]);
 
     const fetchRequests = async () => {
         const token = localStorage.getItem('token');
@@ -161,128 +118,6 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
         } catch (e) {
             console.error(`Failed to ${action} request`, e);
         }
-    };
-
-    // --- Friends System Functions ---
-
-    const fetchFriendsData = async () => {
-        const token = localStorage.getItem('token');
-        try {
-            const [resFriends, resRec, resSent] = await Promise.all([
-                fetch(`${import.meta.env.VITE_API_URL}/friends`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${import.meta.env.VITE_API_URL}/friends/requests/received`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${import.meta.env.VITE_API_URL}/friends/requests/sent`, { headers: { 'Authorization': `Bearer ${token}` } })
-            ]);
-
-            if (resFriends.ok) setFriends(await resFriends.json());
-            if (resRec.ok) setFriendRequests(await resRec.json());
-            if (resSent.ok) setSentFriendRequests(await resSent.json());
-        } catch (e) {
-            console.error("Failed to fetch friends data", e);
-        }
-    };
-
-    const searchUsers = async (query) => {
-        if (!query) {
-            setUserSearchResults([]);
-            return;
-        }
-        setIsSearching(true);
-        const token = localStorage.getItem('token');
-        // Strip @ if present and trim whitespace
-        const trimmed = query.trim();
-        const cleanQuery = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
-
-        try {
-            console.log(`Searching for: ${cleanQuery} at ${import.meta.env.VITE_API_URL}/users/search`);
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/search?query=${cleanQuery}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            console.log("Search response status:", response.status);
-
-            if (response.status === 401) {
-                handleLogout(); // Token expired/invalid
-                return;
-            }
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Search results:", data);
-                setUserSearchResults(data);
-            } else {
-                console.error("Search failed:", response.status);
-            }
-        } catch (e) {
-            console.error("Failed to search users", e);
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const sendFriendRequest = async (userId) => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/friends/request/${userId}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                alert("Friend request sent!");
-                fetchFriendsData();
-                setUserSearchResults([]); // Clear search
-                setUserSearchQuery('');
-            } else {
-                const data = await response.json();
-                alert(data.message || "Failed to send request");
-            }
-        } catch (e) {
-            console.error("Failed to send friend request", e);
-        }
-    };
-
-    const respondToFriendRequest = async (requestId, action) => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/friends/respond/${requestId}/${action}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                fetchFriendsData();
-            }
-        } catch (e) {
-            console.error(`Failed to ${action} friend request`, e);
-        }
-    };
-
-    // --- Chat Functions ---
-
-    const fetchChatHistory = async (friendId) => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/history/${friendId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (response.ok) {
-                setChatMessages(await response.json());
-            }
-        } catch (e) {
-            console.error("Failed to fetch chat history", e);
-        }
-    };
-
-    const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (!chatInput.trim() || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-        const message = {
-            receiver_id: activeChatFriend.id,
-            content: chatInput
-        };
-
-        ws.send(JSON.stringify(message));
-        setChatInput('');
     };
 
     const handleLogout = () => {
@@ -721,63 +556,6 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
                     </div>
                 </div>
             </div>
-
-            {/* Chat Modal / Floating Window */}
-            {activeChatFriend && (
-                <div className="fixed bottom-4 right-4 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-t-xl rounded-b-lg shadow-2xl border border-purple-200 dark:border-purple-900 flex flex-col z-50 overflow-hidden ring-1 ring-black/5">
-                    {/* Header */}
-                    <div className="bg-purple-600 p-3 flex justify-between items-center text-white shadow-md">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
-                                {activeChatFriend.username[0].toUpperCase()}
-                            </div>
-                            <span className="font-bold">@{activeChatFriend.username}</span>
-                        </div>
-                        <button onClick={() => setActiveChatFriend(null)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
-                            <Minimize2 size={18} />
-                        </button>
-                    </div>
-
-                    {/* Messages Area */}
-                    <div className="flex-grow h-80 overflow-y-auto p-4 bg-gray-50 dark:bg-slate-950 space-y-3">
-                        {chatMessages.map((msg, idx) => {
-                            const isMe = msg.sender_id === user.id;
-                            return (
-                                <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${isMe
-                                        ? 'bg-purple-600 text-white rounded-br-none shadow-md'
-                                        : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-bl-none shadow-sm'
-                                        }`}>
-                                        <p>{msg.content}</p>
-                                        <p className={`text-[10px] mt-1 ${isMe ? 'text-purple-200' : 'text-gray-400'} text-right`}>
-                                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input Area */}
-                    <form onSubmit={handleSendMessage} className="p-3 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-800 flex gap-2">
-                        <input
-                            type="text"
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            placeholder="Type a message..."
-                            className="flex-grow px-4 py-2 rounded-full bg-gray-100 dark:bg-slate-800 border-transparent focus:border-purple-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-0 text-sm transition-all outline-none dark:text-white"
-                        />
-                        <button
-                            type="submit"
-                            disabled={!chatInput.trim()}
-                            className="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
-                        >
-                            <Send size={18} />
-                        </button>
-                    </form>
-                </div>
-            )}
         </main>
     );
 }

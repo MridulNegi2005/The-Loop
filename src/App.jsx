@@ -14,6 +14,8 @@ import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import ChatWidget from './components/ChatWidget';
+import { useChatSystem } from './hooks/useChatSystem';
 import { formatDate, formatTime, addToCalendar, Tag } from './lib/utils';
 
 // --- MOCK DATA ---
@@ -322,6 +324,10 @@ export default function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
+    const isMobile = window.innerWidth < 768; // Simple check, could be state if needed
+
+    // Initialize Chat System
+    const chatSystem = useChatSystem(currentUser, isLoggedIn);
 
     // Show splash animation only when starting from root in installed PWA
     React.useEffect(() => {
@@ -508,8 +514,8 @@ export default function App() {
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/signup" element={<SignupPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
-                        <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} />} />
-                        <Route path="/friends" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="friends" />} />
+                        <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} chatSystem={chatSystem} />} />
+                        <Route path="/friends" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="friends" chatSystem={chatSystem} />} />
                         <Route path="/events" element={
                             <EventsContainer
                                 events={events}
@@ -531,6 +537,20 @@ export default function App() {
                     </Routes>
                 )}
             </div>
+
+            {/* Persistent Chat Widget */}
+            {isLoggedIn && currentUser && (
+                <ChatWidget
+                    currentUser={currentUser}
+                    friends={chatSystem.friends}
+                    activeFriend={chatSystem.activeChatFriend}
+                    setActiveFriend={chatSystem.setActiveChatFriend}
+                    messages={chatSystem.chatMessages}
+                    onSendMessage={chatSystem.handleSendMessage}
+                    onClose={() => chatSystem.setActiveChatFriend(null)}
+                    isMobile={isMobile}
+                />
+            )}
         </div>
     );
 }
