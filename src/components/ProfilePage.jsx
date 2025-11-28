@@ -4,8 +4,6 @@ import { Check, X, Clock, MapPin } from 'lucide-react';
 
 import MobileProfileView from './MobileProfileView';
 
-
-
 export default function ProfilePage({ setIsLoggedIn, setPage }) {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -140,6 +138,29 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
         }
     };
 
+    const handleDeleteProfile = async () => {
+        if (window.confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete profile');
+                }
+
+                handleLogout();
+            } catch (error) {
+                console.error(error);
+                alert('Failed to delete profile.');
+            }
+        }
+    };
+
     if (isLoading) {
         return <div className="text-center py-10 text-gray-500">Loading profile...</div>;
     }
@@ -164,6 +185,7 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
                     toggleInterest={toggleInterest}
                     allInterests={allInterests}
                     handleLogout={handleLogout}
+                    handleDeleteProfile={handleDeleteProfile}
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
                     requestsReceived={requestsReceived}
@@ -175,15 +197,12 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
             {/* Desktop View */}
             <div className="hidden md:flex max-w-6xl mx-auto flex-col md:flex-row gap-8">
 
-                {/* Main Content Area */}
-
-
                 {/* Main Content Area - Switched based on activeTab */}
                 {activeTab === 'profile' ? (
                     <div className="flex-grow bg-white/80 dark:bg-slate-900/60 backdrop-blur-md border border-white/20 dark:border-purple-500/30 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(168,85,247,0.15)] p-6 sm:p-8 md:p-12">
-                        {/* ... existing profile content ... */}
                         <div className="flex flex-col md:flex-row items-center md:items-start gap-8 mb-8">
                             <div className="flex-shrink-0 relative">
+                                <div className="absolute inset-0 bg-purple-500 blur-xl opacity-50 rounded-full"></div>
                                 <img
                                     src={avatarUrl}
                                     alt={`${user.username}'s avatar`}
@@ -244,9 +263,17 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-end gap-3 mt-6">
-                                            <button onClick={() => { setIsEditing(false); setFormData({ first_name: user.first_name || '', last_name: user.last_name || '', interests: user.interests ? user.interests.split(',').filter(i => i) : [] }); }} className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Cancel</button>
-                                            <button onClick={saveProfile} className="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] hover:shadow-[0_0_20px_rgba(168,85,247,0.6)]">Save Changes</button>
+                                        <div className="flex justify-between items-center mt-6">
+                                            <button
+                                                onClick={handleDeleteProfile}
+                                                className="px-4 py-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm transition-colors"
+                                            >
+                                                Delete Account
+                                            </button>
+                                            <div className="flex gap-3">
+                                                <button onClick={() => { setIsEditing(false); setFormData({ first_name: user.first_name || '', last_name: user.last_name || '', interests: user.interests ? user.interests.split(',').filter(i => i) : [] }); }} className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Cancel</button>
+                                                <button onClick={saveProfile} className="px-6 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] hover:shadow-[0_0_20px_rgba(168,85,247,0.6)]">Save Changes</button>
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (
@@ -382,6 +409,6 @@ export default function ProfilePage({ setIsLoggedIn, setPage }) {
                     </div>
                 </div>
             </div>
-        </main >
+        </main>
     );
 }

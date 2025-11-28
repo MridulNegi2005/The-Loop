@@ -487,6 +487,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 @app.put("/users/me", response_model=UserSchema)
+@app.put("/users/me", response_model=UserSchema)
 async def update_user_me(user_update: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user_update.interests is not None:
         # Update the legacy string column
@@ -518,37 +519,12 @@ async def update_user_me(user_update: UserUpdate, current_user: User = Depends(g
     db.refresh(current_user)
     return current_user
 
-# --- Carpool Endpoints ---
-
-@app.post("/events/{event_id}/carpool", response_model=CarpoolGroupResponse)
-async def create_carpool_group(
-    event_id: int, 
-    group: CarpoolGroupCreate, 
-    db: Session = Depends(get_db), 
-    current_user: User = Depends(get_current_user)
-):
-    # Check if user joined event
-    joined = db.query(UserEvent).filter(
-        UserEvent.user_id == current_user.id, 
-        UserEvent.event_id == event_id
-    ).first()
-    if not joined:
-        raise HTTPException(status_code=400, detail="You must join the event first")
-
-    new_group = CarpoolGroup(
-        event_id=event_id,
-        owner_id=current_user.id,
-        location=group.location,
-        time=group.time,
-        capacity=group.capacity
-    )
-    db.add(new_group)
+@app.delete("/users/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    db.delete(current_user)
     db.commit()
-    db.refresh(new_group)
-    
-    # Add owner username for response
-    new_group.owner_username = current_user.username
-    return new_group
+    return None
+
 
 @app.get("/events/{event_id}/carpool", response_model=List[CarpoolGroupResponse])
 async def get_carpool_groups(

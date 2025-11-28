@@ -12,6 +12,7 @@ export default function MobileProfileView({
     toggleInterest,
     allInterests,
     handleLogout,
+    handleDeleteProfile,
     activeTab,
     setActiveTab,
     requestsReceived,
@@ -128,6 +129,12 @@ export default function MobileProfileView({
                                     Save
                                 </button>
                             </div>
+                            <button
+                                onClick={handleDeleteProfile}
+                                className="w-full py-3 mt-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm transition-colors bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30"
+                            >
+                                Delete Account
+                            </button>
                         </div>
                     ) : (
                         <div className="space-y-6">
