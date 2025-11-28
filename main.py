@@ -373,6 +373,10 @@ def read_root():
 async def root_head():
     return
 
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check():
+    return {"status": "active"}
+
 import math # Ensure math is imported
 
 @app.get("/events", response_model=List[EventSchema])
