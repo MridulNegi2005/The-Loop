@@ -13,7 +13,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
 
     const fetchGroups = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/events/${eventId}/carpool`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/carpool`);
             if (response.ok) {
                 const data = await response.json();
                 setGroups(data);
@@ -29,7 +29,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/events/${eventId}/carpool`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/carpool`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
     const handleJoinGroup = async (groupId) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/carpool/${groupId}/join`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/carpool/${groupId}/join`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

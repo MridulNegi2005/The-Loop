@@ -136,43 +136,8 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
         }
     }, [isLoggedIn, fetchFriendsData]);
 
-    // WebSocket Connection
-    useEffect(() => {
-        if (isLoggedIn && currentUser) {
-            const token = localStorage.getItem('token');
-            const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
-            const socket = new WebSocket(`${wsUrl}/ws/chat/${currentUser.id}?token=${token}`);
+    // WebSocket Connection logic moved to use Ref below to handle closure issues
 
-            socket.onopen = () => {
-                console.log("Connected to Chat WS");
-            };
-
-            socket.onmessage = (event) => {
-                const msg = JSON.parse(event.data);
-                // If message belongs to active conversation, add it
-                if (activeChatFriend && (
-                    (msg.sender_id === activeChatFriend.id && msg.receiver_id === currentUser.id) ||
-                    (msg.sender_id === currentUser.id && msg.receiver_id === activeChatFriend.id)
-                )) {
-                    setChatMessages(prev => {
-                        if (prev.some(m => m.id === msg.id)) return prev;
-                        return [...prev, msg];
-                    });
-                }
-                // TODO: Handle notifications for other conversations
-            };
-
-            socket.onclose = () => {
-                console.log("Disconnected from Chat WS");
-            };
-
-            setWs(socket);
-
-            return () => {
-                socket.close();
-            };
-        }
-    }, [isLoggedIn, currentUser, activeChatFriend]); // Re-run if activeChatFriend changes to ensure closure has latest state? 
     // Actually, we need to be careful with the WS dependency. 
     // If we put activeChatFriend in dependency, it reconnects every time we switch friends.
     // Better to use a ref for activeChatFriend inside the effect or just let it be global.
