@@ -504,57 +504,79 @@ class GoogleLogin(BaseModel):
     token: str
 
 @app.post("/auth/google", response_model=Token)
+@app.post("/auth/google", response_model=Token)
 async def google_login(login_data: GoogleLogin, db: Session = Depends(get_db)):
+    email = None
+    first_name = None
+    last_name = None
+    
+    # Try verifying as ID Token (JWT)
     try:
-        # Verify the token
-        # Specify the CLIENT_ID of the app that accesses the backend:
         id_info = id_token.verify_oauth2_token(
             login_data.token, 
             google_requests.Request(),
             audience=os.getenv("VITE_GOOGLE_CLIENT_ID")
         )
-
         email = id_info['email']
-        
-        # Check if user exists
-        user = db.query(User).filter(User.email == email).first()
-        is_new_user = False
-        
-        if not user:
-            is_new_user = True
-            # Create new user
-            username = email.split('@')[0]
-            # Ensure username is unique
-            if db.query(User).filter(User.username == username).first():
-                username = f"{username}_{secrets.token_hex(4)}"
-                
-            # Create a random password (user won't know it, they use Google)
-            random_password = secrets.token_urlsafe(16)
-            hashed_password = get_password_hash(random_password)
-            
-            user = User(
-                email=email, 
-                username=username, 
-                hashed_password=hashed_password,
-                first_name=id_info.get('given_name'),
-                last_name=id_info.get('family_name')
+        first_name = id_info.get('given_name')
+        last_name = id_info.get('family_name')
+    except ValueError:
+        # If ID Token verification fails, try as Access Token
+        try:
+            # We need 'requests' library here. It's usually installed with google-auth, 
+            # but let's import it inside to be safe or ensure it's at top. 
+            # Ideally imports should be at top, but for this snippet:
+            import requests
+            response = requests.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {login_data.token}"}
             )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+            if response.status_code == 200:
+                user_info = response.json()
+                email = user_info['email']
+                first_name = user_info.get('given_name')
+                last_name = user_info.get('family_name')
+            else:
+                raise ValueError("Invalid Access Token")
+        except Exception as e:
+             print(f"Google Token Verification Error: {e}")
+             raise HTTPException(status_code=400, detail="Invalid Google token")
+
+    # Check if user exists
+    user = db.query(User).filter(User.email == email).first()
+    is_new_user = False
+    
+    if not user:
+        is_new_user = True
+        # Create new user
+        username = email.split('@')[0]
+        # Ensure username is unique
+        if db.query(User).filter(User.username == username).first():
+            username = f"{username}_{secrets.token_hex(4)}"
             
-        access_token = create_access_token(data={"sub": user.email})
-        return {
-            "access_token": access_token, 
-            "token_type": "bearer",
-            "is_new_user": is_new_user,
-            "first_name": user.first_name,
-            "last_name": user.last_name
-        }
+        # Create a random password (user won't know it, they use Google)
+        random_password = secrets.token_urlsafe(16)
+        hashed_password = get_password_hash(random_password)
         
-    except ValueError as e:
-        print(f"Google Token Verification Error: {e}")
-        raise HTTPException(status_code=400, detail="Invalid Google token")
+        user = User(
+            email=email, 
+            username=username, 
+            hashed_password=hashed_password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+    access_token = create_access_token(data={"sub": user.email})
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "is_new_user": is_new_user,
+        "first_name": user.first_name,
+        "last_name": user.last_name
+    }
 
 @app.post("/users/signup", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
