@@ -118,7 +118,7 @@ export default function MapView({ events, setSelectedEvent, theme }) {
     }, [events, setSelectedEvent]);
 
     useEffect(() => {
-        if (mapRef.current && window.google) {
+        if (mapRef.current && window.google?.maps) {
             const map = new window.google.maps.Map(mapRef.current, { center: { lat: 30.355, lng: 76.365 }, zoom: 15, ...getMapOptions(theme) });
 
             // Custom Pin Icon

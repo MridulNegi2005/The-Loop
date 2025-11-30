@@ -72,22 +72,22 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="bg-[#0a0a0a]/80 backdrop-blur-3xl border border-purple-500/30 rounded-2xl w-full max-w-md overflow-hidden shadow-[0_0_40px_rgba(147,51,234,0.25)]">
                 {/* Header */}
-                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-                    <h2 className="text-xl font-bold text-white">Carpool Groups</h2>
+                <div className="p-4 border-b border-purple-500/30 flex justify-between items-center bg-purple-900/40">
+                    <h2 className="text-xl font-bold text-white drop-shadow-md">Carpool Groups</h2>
                     <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white">
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-4 max-h-[60vh] overflow-y-auto">
+                <div className="p-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     {view === 'list' ? (
                         <div className="space-y-4">
                             <button
                                 onClick={() => setView('create')}
-                                className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] hover:scale-[1.02]"
                             >
                                 <Plus size={18} /> Create New Group
                             </button>
@@ -99,7 +99,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                             ) : (
                                 <div className="space-y-3">
                                     {groups.map(group => (
-                                        <div key={group.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-purple-500/30 transition-colors">
+                                        <div key={group.id} className="bg-white/5 border border-purple-500/10 rounded-xl p-4 hover:border-purple-500/40 transition-all hover:shadow-[0_0_15px_rgba(147,51,234,0.1)]">
                                             <div className="flex justify-between items-start mb-2">
                                                 <h3 className="font-semibold text-white">{group.owner_username}'s Car</h3>
                                                 <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full border border-purple-500/30">
@@ -137,7 +137,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                                             {currentUser && currentUser.username !== group.owner_username && (
                                                 <button
                                                     onClick={() => handleJoinGroup(group.id)}
-                                                    className="w-full py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+                                                    className="w-full py-2 bg-purple-900/20 hover:bg-purple-800/30 border border-purple-500/30 text-purple-100 rounded-lg text-sm font-medium transition-colors"
                                                 >
                                                     Request to Join
                                                 </button>
@@ -150,29 +150,29 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                     ) : (
                         <form onSubmit={handleCreateGroup} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-white/70 mb-1">Pickup Location</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Pickup Location</label>
                                 <input
                                     type="text"
                                     required
                                     value={newGroup.location}
                                     onChange={e => setNewGroup({ ...newGroup, location: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full bg-[#0d1117] border border-purple-500/20 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-600"
                                     placeholder="e.g. Main Gate"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-white/70 mb-1">Departure Time</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Departure Time</label>
                                 <input
                                     type="text"
                                     required
                                     value={newGroup.time}
                                     onChange={e => setNewGroup({ ...newGroup, time: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full bg-[#0d1117] border border-purple-500/20 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-600"
                                     placeholder="e.g. 5:30 PM"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-white/70 mb-1">Available Seats</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Available Seats</label>
                                 <input
                                     type="number"
                                     required
@@ -180,7 +180,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                                     max="10"
                                     value={newGroup.capacity}
                                     onChange={e => setNewGroup({ ...newGroup, capacity: parseInt(e.target.value) })}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                                    className="w-full bg-[#0d1117] border border-purple-500/20 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-600"
                                 />
                             </div>
                             <div className="flex gap-3 pt-2">
@@ -193,7 +193,7 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                                    className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_25px_rgba(147,51,234,0.5)]"
                                 >
                                     Create Group
                                 </button>

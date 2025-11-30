@@ -691,6 +691,44 @@ async def get_carpool_groups(
             
     return groups
 
+@app.post("/events/{event_id}/carpool", response_model=CarpoolGroupResponse)
+async def create_carpool_group(
+    event_id: int,
+    group: CarpoolGroupCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Check if event exists
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+        
+    # Check if user has joined the event
+    is_joined = db.query(UserEvent).filter(
+        UserEvent.user_id == current_user.id,
+        UserEvent.event_id == event_id
+    ).first()
+    
+    if not is_joined:
+        raise HTTPException(status_code=400, detail="You must join the event before creating a carpool group")
+
+    new_group = CarpoolGroup(
+        event_id=event_id,
+        owner_id=current_user.id,
+        location=group.location,
+        time=group.time,
+        capacity=group.capacity
+    )
+    db.add(new_group)
+    db.commit()
+    db.refresh(new_group)
+    
+    # Add owner username for response
+    new_group.owner_username = current_user.username
+    new_group.members = [] 
+    
+    return new_group
+
 @app.post("/carpool/{group_id}/join")
 async def join_carpool_group(
     group_id: int, 

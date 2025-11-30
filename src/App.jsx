@@ -161,7 +161,17 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
                         <div className="w-full md:w-1/2">
                             <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Location</h3>
                             <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
-                            {mapScriptLoaded ? <MapView events={[event]} setSelectedEvent={() => { }} theme={theme} /> : <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center"><p className="text-gray-500">Loading map...</p></div>}
+                            {mapScriptLoaded ? (
+                                <MapView
+                                    events={React.useMemo(() => [event], [event])}
+                                    setSelectedEvent={React.useCallback(() => { }, [])}
+                                    theme={theme}
+                                />
+                            ) : (
+                                <div className="mt-4 w-full h-64 bg-slate-700 rounded-lg flex items-center justify-center">
+                                    <p className="text-gray-500">Loading map...</p>
+                                </div>
+                            )}
                         </div>
                         <div className="flex flex-col gap-4 w-full max-w-md mx-auto mt-8 md:mt-0 items-center">
                             <div className="border-b border-gray-200 dark:border-purple-700/50 pb-2 mb-2 w-full text-center">
@@ -405,7 +415,8 @@ export default function App() {
     // Load Google Maps script when needed
     React.useEffect(() => {
         const isMapPage = location.pathname.startsWith('/events') && (viewMode === 'map' || location.pathname.startsWith('/events/'));
-        if (isMapPage && !window.google) {
+        // Check if maps is missing (even if window.google exists from Auth)
+        if (isMapPage && (!window.google || !window.google.maps)) {
             if (!document.getElementById('google-maps-script')) {
                 const script = document.createElement('script');
                 script.id = 'google-maps-script';
@@ -415,27 +426,10 @@ export default function App() {
                 script.onload = () => setMapScriptLoaded(true);
                 document.head.appendChild(script);
             }
-        } else if (window.google && !mapScriptLoaded) {
+        } else if (window.google?.maps && !mapScriptLoaded) {
             setMapScriptLoaded(true);
         }
     }, [viewMode, location.pathname]);
-
-    // Route components
-    function EventDetailsRoute() {
-        const { id } = useParams();
-        // Find event by id, allowing for string/number mismatch
-        const event = events.find(e => e.id.toString() === id.toString());
-
-        if (isLoading) {
-            return <div className="text-center py-10 text-gray-500">Loading event...</div>;
-        }
-
-        if (!event) {
-            return <div className="text-center py-10 text-gray-500">Event not found. (Check the event link or try refreshing the events list.)</div>;
-        }
-
-        return <EventDetailsPage event={event} mapScriptLoaded={mapScriptLoaded} theme={theme} currentUser={currentUser} fetchEvents={fetchEvents} />;
-    }
 
     return (
         <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0d1117] text-gray-100'}`}>
@@ -529,7 +523,16 @@ export default function App() {
                                 currentUser={currentUser}
                             />
                         } />
-                        <Route path="/events/:id" element={<EventDetailsRoute />} />
+                        <Route path="/events/:id" element={
+                            <EventDetailsWrapper
+                                events={events}
+                                isLoading={isLoading}
+                                mapScriptLoaded={mapScriptLoaded}
+                                theme={theme}
+                                currentUser={currentUser}
+                                fetchEvents={fetchEvents}
+                            />
+                        } />
                         <Route path="*" element={<div className="flex flex-col items-center justify-center py-20 text-gray-500">
                             <img src="/logo_transparent-192x192.PNG" alt="The Loop Logo" className="w-16 h-16 mb-6" style={{ background: 'transparent' }} />
                             <div>Page not found.</div>
@@ -549,8 +552,26 @@ export default function App() {
                     onSendMessage={chatSystem.handleSendMessage}
                     onClose={() => chatSystem.setActiveChatFriend(null)}
                     isMobile={isMobile}
+                    isLoadingChat={chatSystem.isLoadingChat}
                 />
             )}
         </div>
     );
 }
+
+// Helper component defined outside to prevent recreation on re-renders
+const EventDetailsWrapper = ({ events, isLoading, mapScriptLoaded, theme, currentUser, fetchEvents }) => {
+    const { id } = useParams();
+    // Find event by id, allowing for string/number mismatch
+    const event = events.find(e => e.id.toString() === id.toString());
+
+    if (isLoading) {
+        return <div className="text-center py-10 text-gray-500">Loading event...</div>;
+    }
+
+    if (!event) {
+        return <div className="text-center py-10 text-gray-500">Event not found. (Check the event link or try refreshing the events list.)</div>;
+    }
+
+    return <EventDetailsPage event={event} mapScriptLoaded={mapScriptLoaded} theme={theme} currentUser={currentUser} fetchEvents={fetchEvents} />;
+};

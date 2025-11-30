@@ -10,9 +10,10 @@ export default function ChatWidget({
     messages,
     onSendMessage,
     onClose,
-    isMobile
+    isMobile,
+    isLoadingChat
 }) {
-    const [isMinimized, setIsMinimized] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(true);
     const [view, setView] = useState(activeFriend ? 'chat' : 'list'); // 'list' or 'chat'
     const [inputValue, setInputValue] = useState('');
     const messagesEndRef = useRef(null);
@@ -166,20 +167,29 @@ export default function ChatWidget({
                                 </div>
                             ) : (
                                 <div className="p-4 space-y-4">
-                                    {messages.map((msg, idx) => {
-                                        const isMe = msg.sender_id === currentUser.id;
-                                        return (
-                                            <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                                <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${isMe
-                                                    ? 'bg-purple-600 text-white rounded-br-none'
-                                                    : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white rounded-bl-none'
-                                                    }`}>
-                                                    <p>{msg.content}</p>
-                                                </div>
+                                    {
+                                        isLoadingChat ? (
+                                            <div className="flex justify-center items-center h-40" >
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                                             </div>
-                                        );
-                                    })}
-                                    <div ref={messagesEndRef} />
+                                        ) : (
+                                            <>
+                                                {messages.map((msg, idx) => {
+                                                    const isMe = msg.sender_id === currentUser.id;
+                                                    return (
+                                                        <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                                            <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm ${isMe
+                                                                ? 'bg-purple-600 text-white rounded-br-none'
+                                                                : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white rounded-bl-none'
+                                                                }`}>
+                                                                <p>{msg.content}</p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                                <div ref={messagesEndRef} />
+                                            </>
+                                        )}
                                 </div>
                             )}
                         </div>

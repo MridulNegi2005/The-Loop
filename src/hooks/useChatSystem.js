@@ -9,6 +9,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
     // Chat System State
     const [activeChatFriend, setActiveChatFriend] = useState(null);
     const [chatMessages, setChatMessages] = useState([]);
+    const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [ws, setWs] = useState(null);
 
     // Search State (kept here as it's related to finding friends)
@@ -102,6 +103,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
 
     const fetchChatHistory = useCallback(async (friendId) => {
         const token = localStorage.getItem('token');
+        setIsLoadingChat(true);
         try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/chat/history/${friendId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -111,6 +113,8 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
             }
         } catch (e) {
             console.error("Failed to fetch chat history", e);
+        } finally {
+            setIsLoadingChat(false);
         }
     }, []);
 
@@ -194,6 +198,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
         activeChatFriend,
         setActiveChatFriend,
         chatMessages,
+        isLoadingChat,
         userSearchQuery,
         setUserSearchQuery,
         userSearchResults,
