@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { GoogleLogin } from '@react-oauth/google';
 
-const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData }) => {
+const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData, setIsLoggedIn }) => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleInitialSubmit = (e) => {
         e.preventDefault();
@@ -11,6 +14,48 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
             setOnboardingData({ email, username, password });
             setShowOnboarding(true);
         }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: credentialResponse.credential })
+            });
+
+            if (!response.ok) {
+                throw new Error('Google login failed');
+            }
+
+            const data = await response.json();
+            setIsLoggedIn(true);
+            if (data.access_token) {
+                setToken(data.access_token);
+            }
+
+            if (data.is_new_user) {
+                // Trigger onboarding for new Google users
+                setOnboardingData({
+                    firstName: data.first_name || '',
+                    lastName: data.last_name || '',
+                    isGoogle: true
+                });
+                setShowOnboarding(true);
+            } else {
+                setPage('events');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleFailure = () => {
+        setError("Google Sign In was unsuccessful. Try again later.");
     };
 
     return (
@@ -81,19 +126,28 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
             </button>
 
             <div className="w-full max-w-lg z-10 px-4">
-                <div className="bg-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl shadow-[0_0_20px_rgba(147,51,234,0.15)] p-8 md:p-10 transform transition-all hover:scale-[1.01] hover:shadow-[0_0_60px_rgba(147,51,234,0.2)]">
+                <div className="bg-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl shadow-[0_0_20px_rgba(147,51,234,0.15)] p-6 md:p-8 transform transition-all hover:scale-[1.01] hover:shadow-[0_0_60px_rgba(147,51,234,0.2)]">
 
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="w-16 h-16 bg-gradient-to-tr from-fuchsia-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 rotate-[-3deg] hover:rotate-[-6deg] transition-transform duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex flex-col items-center mb-6">
+                        <div className="w-12 h-12 bg-gradient-to-tr from-fuchsia-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg mb-2 rotate-[-3deg] hover:rotate-[-6deg] transition-transform duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                             </svg>
                         </div>
-                        <h2 className="text-3xl font-bold text-white tracking-tight">Create Account</h2>
-                        <p className="text-purple-200/60 mt-2 text-center">Join the community and start exploring</p>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Create Account</h2>
+                        <p className="text-purple-200/60 mt-1 text-center text-sm">Join the community and start exploring</p>
                     </div>
 
-                    <form onSubmit={handleInitialSubmit} className="space-y-5">
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-3 animate-fadeIn">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleInitialSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-purple-200/80 ml-1" htmlFor="signup-email">Email</label>
                             <div className="relative group">
@@ -103,7 +157,7 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
                                     </svg>
                                 </div>
                                 <input
-                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
+                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
                                     id="signup-email"
                                     type="email"
                                     placeholder="you@college.edu"
@@ -123,7 +177,7 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
                                     </svg>
                                 </div>
                                 <input
-                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
+                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
                                     id="signup-username"
                                     type="text"
                                     placeholder="cool_student"
@@ -143,7 +197,7 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
                                     </svg>
                                 </div>
                                 <input
-                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
+                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
                                     id="signup-password"
                                     type="password"
                                     placeholder="••••••••"
@@ -155,14 +209,29 @@ const SignupPage = ({ setPage, setToken, setShowOnboarding, setOnboardingData })
                         </div>
 
                         <button
-                            className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(192,38,211,0.3)] hover:shadow-[0_0_30px_rgba(192,38,211,0.5)] transform hover:scale-[1.02] transition-all duration-300 mt-4"
+                            className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(192,38,211,0.3)] hover:shadow-[0_0_30px_rgba(192,38,211,0.5)] transform hover:scale-[1.02] transition-all duration-300 mt-2"
                             type="submit"
                         >
                             Continue
                         </button>
+
+                        <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-gray-600"></div>
+                            <span className="flex-shrink-0 mx-4 text-gray-400 text-xs">Or continue with</span>
+                            <div className="flex-grow border-t border-gray-600"></div>
+                        </div>
+
+                        <div className="flex justify-center w-full">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={handleGoogleFailure}
+                                theme="filled_black"
+                                shape="pill"
+                            />
+                        </div>
                     </form>
 
-                    <div className="mt-8 text-center">
+                    <div className="mt-6 text-center">
                         <p className="text-gray-400 text-sm">
                             Already have an account?{' '}
                             <button

@@ -168,16 +168,16 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnb
             </button>
 
             <div className="w-full max-w-lg z-10 px-4">
-                <div className="bg-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl shadow-[0_0_20px_rgba(147,51,234,0.15)] p-8 md:p-10 transform transition-all hover:scale-[1.01] hover:shadow-[0_0_60px_rgba(147,51,234,0.2)]">
+                <div className="bg-purple-900/20 backdrop-blur-sm border border-purple-500/30 rounded-2xl shadow-[0_0_20px_rgba(147,51,234,0.15)] p-6 md:p-8 transform transition-all hover:scale-[1.01] hover:shadow-[0_0_60px_rgba(147,51,234,0.2)]">
 
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 rotate-3 hover:rotate-6 transition-transform duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="flex flex-col items-center mb-6">
+                        <div className="w-12 h-12 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-2 rotate-3 hover:rotate-6 transition-transform duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
                         </div>
-                        <h2 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h2>
-                        <p className="text-purple-200/60 mt-2 text-center">Sign in to continue your journey</p>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h2>
+                        <p className="text-purple-200/60 mt-1 text-center text-sm">Sign in to continue your journey</p>
                     </div>
 
                     {error && (
@@ -189,7 +189,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnb
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-purple-200/80 ml-1" htmlFor="identifier">
                                 {loginMethod === 'username' ? 'Username' : 'Email'}
@@ -201,7 +201,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnb
                                     </svg>
                                 </div>
                                 <input
-                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
+                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
                                     id="identifier"
                                     type={loginMethod === 'username' ? 'text' : 'email'}
                                     placeholder={loginMethod === 'username' ? 'cooluser123' : 'you@college.edu'}
@@ -233,7 +233,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnb
                                     </svg>
                                 </div>
                                 <input
-                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
+                                    className="w-full bg-[#0d1117]/50 border border-gray-700/50 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all placeholder-gray-600 hover:bg-[#0d1117]/80"
                                     id="password"
                                     type="password"
                                     placeholder="••••••••"
@@ -245,7 +245,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnb
                         </div>
 
                         <button
-                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
+                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-2"
                             type="submit"
                             disabled={isLoading}
                         >
@@ -276,7 +276,7 @@ const LoginPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnb
                         </div>
                     </form>
 
-                    <div className="mt-8 text-center">
+                    <div className="mt-6 text-center">
                         <p className="text-gray-400 text-sm">
                             Don't have an account?{' '}
                             <button

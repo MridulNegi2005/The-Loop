@@ -508,11 +508,11 @@ export default function App() {
                     </div>
                 ) : (
                     <Routes>
-                        <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} />} />
+                        <Route path="/" element={<LandingPage setPage={page => navigate(page === 'events' ? '/events' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/login" element={<LoginPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
-                        <Route path="/signup" element={<SignupPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
+                        <Route path="/signup" element={<SignupPage setPage={page => navigate(page === 'landing' ? '/' : `/${page}`)} setIsLoggedIn={setIsLoggedIn} setToken={setToken} setShowOnboarding={setShowOnboarding} setOnboardingData={setOnboardingData} />} />
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
                         <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} chatSystem={chatSystem} />} />
                         <Route path="/friends" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="friends" chatSystem={chatSystem} />} />

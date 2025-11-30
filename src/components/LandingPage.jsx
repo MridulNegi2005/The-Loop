@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 
-const LandingPage = ({ setPage, setIsLoggedIn, setToken }) => {
+const LandingPage = ({ setPage, setIsLoggedIn, setToken, setShowOnboarding, setOnboardingData }) => {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -47,6 +48,48 @@ const LandingPage = ({ setPage, setIsLoggedIn, setToken }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: credentialResponse.credential })
+            });
+
+            if (!response.ok) {
+                throw new Error('Google login failed');
+            }
+
+            const data = await response.json();
+            setIsLoggedIn(true);
+            if (data.access_token) {
+                setToken(data.access_token);
+            }
+
+            if (data.is_new_user) {
+                // Trigger onboarding for new Google users
+                setOnboardingData({
+                    firstName: data.first_name || '',
+                    lastName: data.last_name || '',
+                    isGoogle: true
+                });
+                setShowOnboarding(true);
+            } else {
+                navigate('/events');
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleFailure = () => {
+        setError("Google Sign In was unsuccessful. Try again later.");
     };
 
     return (
@@ -141,8 +184,8 @@ const LandingPage = ({ setPage, setIsLoggedIn, setToken }) => {
 
                 {/* Right Side: Login Card */}
                 <div className="hidden md:block flex-1 w-full max-w-md">
-                    <div className="bg-[#161b22]/80 backdrop-blur-xl border border-purple-500/20 p-8 rounded-2xl shadow-[0_0_40px_rgba(147,51,234,0.1)] hover:shadow-[0_0_50px_rgba(147,51,234,0.2)] transition-shadow duration-500">
-                        <div className="mb-8 text-center">
+                    <div className="bg-[#161b22]/80 backdrop-blur-xl border border-purple-500/20 p-6 md:p-8 rounded-2xl shadow-[0_0_40px_rgba(147,51,234,0.1)] hover:shadow-[0_0_50px_rgba(147,51,234,0.2)] transition-shadow duration-500">
+                        <div className="mb-6 text-center">
                             <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-md">Welcome Back</h2>
                             <p className="text-gray-400 text-sm">Enter your credentials to access your account</p>
                         </div>
@@ -153,7 +196,7 @@ const LandingPage = ({ setPage, setIsLoggedIn, setToken }) => {
                             </div>
                         )}
 
-                        <form onSubmit={handleLogin} className="space-y-5">
+                        <form onSubmit={handleLogin} className="space-y-4">
                             <div className="group">
                                 <label className="block text-gray-300 text-sm font-medium mb-2 group-hover:text-purple-300 transition-colors" htmlFor="email">Email Address</label>
                                 <input
@@ -185,6 +228,21 @@ const LandingPage = ({ setPage, setIsLoggedIn, setToken }) => {
                             >
                                 {isLoading ? 'Signing In...' : 'Sign In'}
                             </button>
+
+                            <div className="relative flex py-2 items-center">
+                                <div className="flex-grow border-t border-gray-600"></div>
+                                <span className="flex-shrink-0 mx-4 text-gray-400 text-xs">Or continue with</span>
+                                <div className="flex-grow border-t border-gray-600"></div>
+                            </div>
+
+                            <div className="flex justify-center w-full">
+                                <GoogleLogin
+                                    onSuccess={handleGoogleSuccess}
+                                    onError={handleGoogleFailure}
+                                    theme="filled_black"
+                                    shape="pill"
+                                />
+                            </div>
                         </form>
 
                         <div className="mt-6 text-center">
