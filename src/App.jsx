@@ -140,6 +140,9 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
         }
     };
 
+    const mapEvents = React.useMemo(() => [event], [event]);
+    const handleSetSelectedEvent = React.useCallback(() => { }, []);
+
     return (
         <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
             <div className="bg-white dark:bg-[#161b22] border border-gray-200 dark:border-purple-800/50 rounded-xl overflow-hidden shadow-lg">
@@ -163,8 +166,8 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
                             <p className="text-gray-600 dark:text-gray-400 mt-1">{event.venue}</p>
                             {mapScriptLoaded ? (
                                 <MapView
-                                    events={React.useMemo(() => [event], [event])}
-                                    setSelectedEvent={React.useCallback(() => { }, [])}
+                                    events={mapEvents}
+                                    setSelectedEvent={handleSetSelectedEvent}
                                     theme={theme}
                                 />
                             ) : (
