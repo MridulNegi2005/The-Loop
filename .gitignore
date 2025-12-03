@@ -15,5 +15,5 @@ yarn-error.log*
 
 # VSCode
 .vscode/
-oAuth secret.json
+Google OAuth.json
 __pycache__/

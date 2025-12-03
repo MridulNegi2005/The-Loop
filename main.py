@@ -56,8 +56,8 @@ pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 # This key should be stored securely, e.g., in an environment variable.
 # It's used to sign the JWTs.
-SECRET_KEY = "a_very_secret_key_that_should_be_in_an_env_file" # IMPORTANT: Change this and keep it secret
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY", "a_very_secret_key_that_should_be_in_an_env_file")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
@@ -286,8 +286,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
+            print("Auth Error: No sub (email) in token")
             raise credentials_exception
-    except JWTError:
+    except JWTError as e:
+        print(f"Auth Error: JWT Validation failed: {e}")
         raise credentials_exception
     user = db.query(User).filter(User.email == email).first()
     if user is None:
@@ -995,7 +997,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int, token: str = 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
-    except:
+    except Exception as e:
+        print(f"WebSocket Auth Error: {e}")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
