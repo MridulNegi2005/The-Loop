@@ -1,6 +1,6 @@
 # Backend requirements for The Loop (FastAPI backend)
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 pydantic
 passlib[argon2]
