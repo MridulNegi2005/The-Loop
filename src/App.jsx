@@ -434,6 +434,10 @@ export default function App() {
         }
     }, [viewMode, location.pathname]);
 
+    const handleSetSelectedEvent = React.useCallback((event) => {
+        event ? navigate(`/events/${event.id}`) : navigate('/events');
+    }, [navigate]);
+
     return (
         <div className={`min-h-screen font-sans transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-[#0d1117] text-gray-100'}`}>
             <style>{`
@@ -516,7 +520,7 @@ export default function App() {
                         <Route path="/events" element={
                             <EventsContainer
                                 events={events}
-                                setSelectedEvent={event => event ? navigate(`/events/${event.id}`) : navigate('/events')}
+                                setSelectedEvent={handleSetSelectedEvent}
                                 isLoading={isLoading}
                                 error={error}
                                 setViewMode={setViewMode}

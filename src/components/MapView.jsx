@@ -101,10 +101,16 @@ export default function MapView({ events, setSelectedEvent, theme }) {
     const infoWindowRef = useRef(null);
     const isMobile = typeof window !== 'undefined' && (/android|iphone|ipad|ipod|opera mini|iemobile|mobile/i.test(navigator.userAgent));
 
+    const setSelectedEventRef = useRef(setSelectedEvent);
+
+    useEffect(() => {
+        setSelectedEventRef.current = setSelectedEvent;
+    }, [setSelectedEvent]);
+
     useEffect(() => {
         window.selectEventFromMap = (eventId) => {
             const event = events.find(e => e.id.toString() === eventId.toString());
-            if (event) setSelectedEvent(event);
+            if (event) setSelectedEventRef.current(event);
         };
         window.closeInfoWindow = () => {
             if (infoWindowRef.current) {
@@ -113,9 +119,9 @@ export default function MapView({ events, setSelectedEvent, theme }) {
         }
         window.openFirstEventFromInfoWindow = (lat, lng) => {
             const event = events.find(e => e.lat === lat && e.lng === lng);
-            if (event) setSelectedEvent(event);
+            if (event) setSelectedEventRef.current(event);
         };
-    }, [events, setSelectedEvent]);
+    }, [events]);
 
     useEffect(() => {
         if (mapRef.current && window.google?.maps) {
@@ -214,7 +220,7 @@ export default function MapView({ events, setSelectedEvent, theme }) {
             });
             map.addListener('click', () => infoWindow.close());
         }
-    }, [events, setSelectedEvent, theme]);
+    }, [events, theme]);
 
     return <div className="mt-8"><div ref={mapRef} className="w-full h-[calc(100vh-280px)] rounded-xl border border-gray-200 dark:border-gray-800" /></div>;
 }
