@@ -169,6 +169,27 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
 
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
+
+                // Handle Status Updates
+                if (msg.type === 'status') {
+                    setFriends(prevFriends => prevFriends.map(friend =>
+                        friend.id === msg.user_id
+                            ? { ...friend, is_online: msg.status === 'online' }
+                            : friend
+                    ));
+                    return;
+                }
+
+                if (msg.type === 'initial_status') {
+                    const onlineIds = new Set(msg.online_users);
+                    setFriends(prevFriends => prevFriends.map(friend => ({
+                        ...friend,
+                        is_online: onlineIds.has(friend.id)
+                    })));
+                    return;
+                }
+
+                // Handle Chat Messages
                 const currentActive = activeChatFriendRef.current;
 
                 if (currentActive && (

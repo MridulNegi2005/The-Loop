@@ -151,8 +151,10 @@ export default function ChatWidget({
                                                         <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 font-bold text-lg">
                                                             {friend.username[0].toUpperCase()}
                                                         </div>
-                                                        {/* Online indicator simulation */}
-                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+                                                        {/* Online indicator */}
+                                                        {friend.is_online && (
+                                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+                                                        )}
                                                     </div>
                                                     <div className="flex-grow min-w-0">
                                                         <h4 className="font-medium text-gray-900 dark:text-white truncate">@{friend.username}</h4>

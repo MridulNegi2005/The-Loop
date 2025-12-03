@@ -986,7 +986,30 @@ class ConnectionManager:
             for connection in self.active_connections[user_id]:
                 await connection.send_json(message)
 
+    async def broadcast_status(self, user_id: int, status: str, friend_ids: List[int]):
+        """Broadcasts a user's status (online/offline) to their friends."""
+        message = {"type": "status", "user_id": user_id, "status": status}
+        for friend_id in friend_ids:
+            if friend_id in self.active_connections:
+                await self.send_personal_message(message, friend_id)
+
 manager = ConnectionManager()
+
+def get_user_friends_ids(user_id: int, db: Session) -> List[int]:
+    """Helper to get a list of friend IDs for a user."""
+    friendships = db.query(FriendRequest).filter(
+        or_(
+            FriendRequest.requester_id == user_id,
+            FriendRequest.receiver_id == user_id
+        ),
+        FriendRequest.status == "accepted"
+    ).all()
+    
+    friend_ids = []
+    for f in friendships:
+        fid = f.receiver_id if f.requester_id == user_id else f.requester_id
+        friend_ids.append(fid)
+    return friend_ids
 
 @app.websocket("/ws/chat/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: int, token: str = Query(...), db: Session = Depends(get_db)):
@@ -1008,6 +1031,23 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int, token: str = 
         return
 
     await manager.connect(websocket, user.id)
+    
+    # Notify friends that user is online
+    friend_ids = get_user_friends_ids(user.id, db)
+    await manager.broadcast_status(user.id, "online", friend_ids)
+    
+    # Send current online status of friends to the user
+    online_friends = []
+    for fid in friend_ids:
+        if fid in manager.active_connections:
+            online_friends.append(fid)
+            
+    if online_friends:
+        await manager.send_personal_message({
+            "type": "initial_status",
+            "online_users": online_friends
+        }, user.id)
+
     try:
         while True:
             data = await websocket.receive_json()
@@ -1042,6 +1082,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int, token: str = 
                 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user.id)
+        # Notify friends that user is offline
+        await manager.broadcast_status(user.id, "offline", friend_ids)
 
 
 # --- How to Run ---
