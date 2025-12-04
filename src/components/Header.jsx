@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function Header({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewMode, theme, setTheme, setToken }) {
+export default function Header({ setPage, isLoggedIn, setIsLoggedIn, setSelectedEvent, setViewMode, theme, setTheme, setToken, currentUser }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [showPwaButton, setShowPwaButton] = useState(false);
@@ -129,13 +129,21 @@ export default function Header({ setPage, isLoggedIn, setIsLoggedIn, setSelected
                 </div>
 
                 {/* 2. Center Section: Events Button */}
-                <div className="hidden md:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+                <div className="hidden md:flex items-center justify-center absolute left-1/2 -translate-x-1/2 gap-4">
                     <button
                         onClick={goHome}
                         className="px-6 py-2 rounded-full bg-gray-100 dark:bg-white/5 text-sm font-bold text-gray-900 dark:text-white hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400 transition-all shadow-sm hover:shadow-md"
                     >
                         Events
                     </button>
+                    {isLoggedIn && currentUser?.is_admin && (
+                        <button
+                            onClick={() => navAction('admin')}
+                            className="px-6 py-2 rounded-full bg-gray-100 dark:bg-white/5 text-sm font-bold text-gray-900 dark:text-white hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400 transition-all shadow-sm hover:shadow-md"
+                        >
+                            Admin Portal
+                        </button>
+                    )}
                 </div>
 
                 {/* 3. Actions & Profile */}

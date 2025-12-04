@@ -8,6 +8,7 @@ import CarpoolModal from './components/CarpoolModal';
 import EventList from './components/EventList';
 import MapView from './components/MapView';
 import ProfilePage from './components/ProfilePage';
+import AdminPortal from './components/AdminPortal';
 import WelcomeOnboarding from './components/WelcomeOnboarding';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
@@ -417,7 +418,7 @@ export default function App() {
 
     // Load Google Maps script when needed
     React.useEffect(() => {
-        const isMapPage = location.pathname.startsWith('/events') && (viewMode === 'map' || location.pathname.startsWith('/events/'));
+        const isMapPage = (location.pathname.startsWith('/events') && (viewMode === 'map' || location.pathname.startsWith('/events/'))) || location.pathname.startsWith('/admin');
         // Check if maps is missing (even if window.google exists from Auth)
         if (isMapPage && (!window.google || !window.google.maps)) {
             if (!document.getElementById('google-maps-script')) {
@@ -494,6 +495,7 @@ export default function App() {
                     theme={theme}
                     setTheme={setTheme}
                     setToken={setToken}
+                    currentUser={currentUser}
                 />
             )}
             <div className="page-transition">
@@ -517,6 +519,7 @@ export default function App() {
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
                         <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} chatSystem={chatSystem} />} />
                         <Route path="/friends" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="friends" chatSystem={chatSystem} />} />
+                        <Route path="/admin" element={<AdminPortal currentUser={currentUser} mapScriptLoaded={mapScriptLoaded} />} />
                         <Route path="/events" element={
                             <EventsContainer
                                 events={events}

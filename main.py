@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, or_, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import List, Optional, Dict
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -16,6 +16,10 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
 load_dotenv()
+
+# Admin Configuration
+ADMIN_EMAILS = os.getenv("ADMIN_EMAILS", "").split(",")
+
 
 app = FastAPI()
 
@@ -121,6 +125,8 @@ class Event(Base):
     lat = Column(Float)
     lng = Column(Float)
     tags = Column(String) # Storing as a comma-separated string
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Added owner_id
+
 
 # Carpool Group Model
 class CarpoolGroup(Base):
@@ -176,8 +182,28 @@ class EventSchema(BaseModel):
     match_score: Optional[float] = 0.0 # Added match_score
     match_percentage: Optional[int] = 0 # Added match_percentage
     is_joined: Optional[bool] = False # Added is_joined status
+    owner_id: Optional[int] = None
+
+    @field_validator('tags', mode='before')
+    @classmethod
+    def split_tags(cls, v):
+        if isinstance(v, str):
+            return [tag.strip() for tag in v.split(',')] if v else []
+        return v
+
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class EventCreate(BaseModel):
+    title: str
+    description: str
+    start_at: str
+    end_at: str
+    venue: str
+    lat: float
+    lng: float
+    tags: List[str]
+
 
 # Defines the shape for creating a new user.
 class UserCreate(BaseModel):
@@ -193,8 +219,9 @@ class UserSchema(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     interests: Optional[str] = None
+    is_admin: Optional[bool] = False
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserUpdate(BaseModel):
     interests: Optional[List[str]] = None
@@ -207,7 +234,11 @@ class Token(BaseModel):
     token_type: str
     is_new_user: Optional[bool] = False
     first_name: Optional[str] = None
+    is_new_user: Optional[bool] = False
+    first_name: Optional[str] = None
     last_name: Optional[str] = None
+    is_admin: bool = False
+
 
 # Carpool Schemas
 class CarpoolGroupCreate(BaseModel):
@@ -225,7 +256,7 @@ class CarpoolGroupResponse(BaseModel):
     owner_username: Optional[str] = None
     members: Optional[List[dict]] = None # List of {username, email} for owner
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CarpoolRequestResponse(BaseModel):
     id: int
@@ -236,7 +267,7 @@ class CarpoolRequestResponse(BaseModel):
     group_location: Optional[str] = None
     event_title: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class FriendRequestResponse(BaseModel):
     id: int
@@ -247,7 +278,7 @@ class FriendRequestResponse(BaseModel):
     requester_username: Optional[str] = None
     receiver_username: Optional[str] = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class FriendResponse(BaseModel):
     id: int
@@ -256,7 +287,7 @@ class FriendResponse(BaseModel):
     last_name: Optional[str] = None
     email: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ChatMessageResponse(BaseModel):
     id: int
@@ -265,7 +296,7 @@ class ChatMessageResponse(BaseModel):
     content: str
     timestamp: datetime
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Dependency for Database Session ---
 def get_db():
@@ -370,7 +401,9 @@ def seed_database():
     db.close()
 
 # Run the seeding function on startup
-seed_database()
+@app.on_event("startup")
+async def startup_event():
+    seed_database()
 
 # --- API Endpoints ---
 @app.get("/")
@@ -577,7 +610,8 @@ async def google_login(login_data: GoogleLogin, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "is_new_user": is_new_user,
         "first_name": user.first_name,
-        "last_name": user.last_name
+        "last_name": user.last_name,
+        "is_admin": user.email in ADMIN_EMAILS
     }
 
 @app.post("/users/signup", response_model=UserSchema, status_code=status.HTTP_201_CREATED)
@@ -617,13 +651,19 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "is_admin": user.email in ADMIN_EMAILS
+    }
 
 @app.get("/users/me", response_model=UserSchema)
 async def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
+    # Inject is_admin status dynamically
+    user_data = UserSchema.from_orm(current_user)
+    user_data.is_admin = current_user.email in ADMIN_EMAILS
+    return user_data
 
-@app.put("/users/me", response_model=UserSchema)
 @app.put("/users/me", response_model=UserSchema)
 async def update_user_me(user_update: UserUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user_update.interests is not None:
@@ -812,12 +852,7 @@ async def manage_request(
         raise HTTPException(status_code=403, detail="Not authorized")
         
     if action == "accept":
-        if req.status != "accepted":
-            if group.capacity <= 0:
-                raise HTTPException(status_code=400, detail="Group is full")
-            req.status = "accepted"
-            group.capacity -= 1
-        # Optional: decrement capacity? For now just simple status.
+        req.status = "accepted"
     elif action == "reject":
         req.status = "rejected"
     else:
@@ -825,6 +860,105 @@ async def manage_request(
         
     db.commit()
     return {"message": f"Request {action}ed"}
+
+# --- Admin Endpoints ---
+
+@app.post("/events", response_model=EventSchema, status_code=status.HTTP_201_CREATED)
+async def create_event(event: EventCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    new_event = Event(
+        title=event.title,
+        description=event.description,
+        start_at=event.start_at,
+        end_at=event.end_at,
+        venue=event.venue,
+        lat=event.lat,
+        lng=event.lng,
+        tags=",".join(event.tags),
+        owner_id=current_user.id
+    )
+    db.add(new_event)
+    db.commit()
+    db.refresh(new_event)
+    return new_event
+
+@app.put("/events/{event_id}", response_model=EventSchema)
+async def update_event(event_id: int, event: EventCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    db_event = db.query(Event).filter(Event.id == event_id).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+        
+    # Check if this admin owns the event (optional, but good practice)
+    # For now, allowing any admin to edit any event as per "There can be multiple admins"
+    if db_event.owner_id and db_event.owner_id != current_user.id:
+         # Optional: restrict to owner? User said "They can view events added by them only!"
+         # So yes, restrict edit/delete to owner.
+         raise HTTPException(status_code=403, detail="You can only edit events you created")
+
+    db_event.title = event.title
+    db_event.description = event.description
+    db_event.start_at = event.start_at
+    db_event.end_at = event.end_at
+    db_event.venue = event.venue
+    db_event.lat = event.lat
+    db_event.lng = event.lng
+    db_event.tags = ",".join(event.tags)
+    
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+@app.delete("/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_event(event_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    db_event = db.query(Event).filter(Event.id == event_id).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+        
+    if db_event.owner_id and db_event.owner_id != current_user.id:
+         raise HTTPException(status_code=403, detail="You can only delete events you created")
+
+    db.delete(db_event)
+    db.commit()
+    return None
+
+@app.get("/admin/events", response_model=List[EventSchema])
+async def get_admin_events(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    # "They can view events added by them only!"
+    events = db.query(Event).filter(Event.owner_id == current_user.id).all()
+    
+    # Reuse the logic to populate match_score etc (though not strictly needed for admin view, it keeps schema consistent)
+    results = []
+    for event in events:
+        tags = event.tags.split(',') if event.tags else []
+        event_resp = EventSchema(
+            id=event.id,
+            title=event.title,
+            description=event.description,
+            start_at=event.start_at,
+            end_at=event.end_at,
+            venue=event.venue,
+            tags=tags,
+            lat=event.lat,
+            lng=event.lng,
+            match_score=0.0,
+            match_percentage=0,
+            is_joined=False,
+            owner_id=event.owner_id
+        )
+        results.append(event_resp)
+        
+    return results
 
 # --- Friends System Endpoints ---
 
