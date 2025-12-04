@@ -17,3 +17,5 @@ yarn-error.log*
 .vscode/
 Google OAuth.json
 __pycache__/
+/diagrams
+/SE diagrams
