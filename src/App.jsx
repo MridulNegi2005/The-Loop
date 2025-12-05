@@ -1,6 +1,7 @@
 // --- APP VERSION ---
 const APP_VERSION = '2';
 import React, { useState, useEffect, useRef } from 'react';
+import { Car } from 'lucide-react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import EventCard from './components/EventCard';
@@ -187,7 +188,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
                                     onClick={() => setShowCarpool(true)}
                                     className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 w-full mb-2"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                    <Car size={24} />
                                     Carpool
                                 </button>
                             )}
