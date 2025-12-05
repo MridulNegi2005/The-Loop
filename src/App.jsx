@@ -349,11 +349,13 @@ export default function App() {
         if ((window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) && location.pathname === '/') {
             setShowSplash(true);
             setTimeout(() => {
-                navigate('/events');
+                if (isLoggedIn) {
+                    navigate('/events');
+                }
                 setShowSplash(false);
             }, 1200); // 1.2s splash
         }
-    }, [navigate, location.pathname]);
+    }, [navigate, location.pathname, isLoggedIn]);
 
     React.useEffect(() => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -501,7 +503,7 @@ export default function App() {
             )}
             <div className="page-transition">
                 {showSplash ? (
-                    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0d1117] text-white animate-fadeIn">
+                    <div className="flex flex-col items-center justify-center w-screen h-[100dvh] bg-[#0d1117] text-white animate-fadeIn fixed top-0 left-0 z-50">
                         <img
                             src="/logo_transparent-192x192.PNG"
                             alt="The Loop Logo"
