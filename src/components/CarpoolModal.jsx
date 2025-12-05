@@ -163,12 +163,11 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-1">Departure Time</label>
                                 <input
-                                    type="text"
+                                    type="time"
                                     required
                                     value={newGroup.time}
                                     onChange={e => setNewGroup({ ...newGroup, time: e.target.value })}
-                                    className="w-full bg-[#0d1117] border border-purple-500/20 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-600"
-                                    placeholder="e.g. 5:30 PM"
+                                    className="w-full bg-[#0d1117] border border-purple-500/20 rounded-lg p-2.5 text-white focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all placeholder-gray-600 [color-scheme:dark]"
                                 />
                             </div>
                             <div>
