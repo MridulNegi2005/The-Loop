@@ -22,3 +22,5 @@ __pycache__/
 Report.tex
 *.db
 *.sqlite3
+reset_db.py
+delete.py
