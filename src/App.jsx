@@ -522,6 +522,7 @@ export default function App() {
                         <Route path="/interest_selection" element={<InterestSelectorPage setPage={page => navigate(`/${page}`)} setIsLoggedIn={setIsLoggedIn} />} />
                         <Route path="/profile" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} chatSystem={chatSystem} />} />
                         <Route path="/friends" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="friends" chatSystem={chatSystem} />} />
+                        <Route path="/carpool" element={<ProfilePage setIsLoggedIn={setIsLoggedIn} setPage={page => navigate(`/${page}`)} initialTab="carpool" chatSystem={chatSystem} />} />
                         <Route path="/admin" element={<AdminPortal currentUser={currentUser} mapScriptLoaded={mapScriptLoaded} />} />
                         <Route path="/events" element={
                             <EventsContainer
