@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDate, formatTime } from '../lib/utils';
 import { toast } from '../lib/toast';
+import { darkMapStyles } from '../lib/mapStyles';
+import { CAMPUS_CENTER, CAMPUS_VENUES } from '../config/campus';
 
 const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
     const navigate = useNavigate();
@@ -23,8 +25,8 @@ const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
         start_at: '',
         end_at: '',
         venue: '',
-        lat: 30.3558, // Default to campus center
-        lng: 76.3625,
+        lat: CAMPUS_CENTER.lat, // Default to campus center
+        lng: CAMPUS_CENTER.lng,
         tags: [] // Changed to array for multi-select
     });
 
@@ -33,16 +35,8 @@ const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
     const markerRef = useRef(null);
     const googleMapRef = useRef(null);
 
-    // Predefined Locations (Mock for now, could be fetched)
-    const predefinedLocations = [
-        { name: "Main Auditorium", lat: 30.3558, lng: 76.3625 },
-        { name: "The Student Cafe", lat: 30.3532, lng: 76.3651 },
-        { name: "Gymnasium Hall", lat: 30.3571, lng: 76.3689 },
-        { name: "Computer Lab 3", lat: 30.3545, lng: 76.3660 },
-        { name: "Tan Auditorium", lat: 30.3565, lng: 76.3645 },
-        { name: "COS", lat: 30.3540, lng: 76.3655 },
-        { name: "Fete Area", lat: 30.3580, lng: 76.3695 },
-    ];
+    // Predefined campus locations (see src/config/campus.js)
+    const predefinedLocations = CAMPUS_VENUES;
 
     useEffect(() => {
         if (!currentUser || !currentUser.is_admin) {
@@ -73,26 +67,7 @@ const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
             center: { lat: formData.lat, lng: formData.lng },
             zoom: 16,
             disableDefaultUI: true,
-            styles: [
-                { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
-                { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] },
-                { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] },
-                { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
-                { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
-                { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#263c3f" }] },
-                { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#6b9a76" }] },
-                { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
-                { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] },
-                { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] },
-                { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#746855" }] },
-                { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1f2835" }] },
-                { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#f3d19c" }] },
-                { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f3948" }] },
-                { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
-                { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] },
-                { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#515c6d" }] },
-                { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }
-            ]
+            styles: darkMapStyles
         });
 
         googleMapRef.current = map;

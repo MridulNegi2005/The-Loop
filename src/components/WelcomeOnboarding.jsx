@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { INTERESTS } from '../config/interests';
 
 const WelcomeOnboarding = ({ email, username, password, setToken, setIsLoggedIn, setPage, onComplete, firstName: initialFirstName, lastName: initialLastName, isGoogle, token }) => {
     const [step, setStep] = useState('name'); // name, interests, processing, success
@@ -8,7 +9,7 @@ const WelcomeOnboarding = ({ email, username, password, setToken, setIsLoggedIn,
     const [selectedInterests, setSelectedInterests] = useState([]);
     const [error, setError] = useState(null);
 
-    const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon'];
+    const allInterests = INTERESTS;
 
     useEffect(() => {
         if (initialFirstName) setFirstName(initialFirstName);

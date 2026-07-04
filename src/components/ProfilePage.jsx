@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tag } from '../lib/utils';
 import { toast } from '../lib/toast';
+import { INTERESTS } from '../config/interests';
 import { Check, X, UserPlus, MessageCircle, Search, AlertTriangle } from 'lucide-react';
 
 import MobileProfileView from './MobileProfileView';
@@ -37,7 +38,7 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
         respondToFriendRequest
     } = chatSystem;
 
-    const allInterests = ['sports', 'party', 'clubbing', 'movie', 'dancing', 'singing', 'tech', 'art', 'workshop', 'gaming', 'food', 'comedy', 'hackathon'];
+    const allInterests = INTERESTS;
 
     useEffect(() => {
         const fetchUser = async () => {
