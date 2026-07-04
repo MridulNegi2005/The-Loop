@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, X, Minimize2, ChevronLeft, Edit, MessageCircle } from 'lucide-react';
+import { Send, X, Minimize2, ChevronLeft, Edit, MessageCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ChatWidget({
@@ -11,7 +11,8 @@ export default function ChatWidget({
     onSendMessage,
     onClose,
     isMobile,
-    isLoadingChat
+    isLoadingChat,
+    connectionStatus = 'open'
 }) {
     const [isMinimized, setIsMinimized] = useState(true);
     const [view, setView] = useState(activeFriend ? 'chat' : 'list'); // 'list' or 'chat'
@@ -134,6 +135,14 @@ export default function ChatWidget({
                                 </button>
                             </div>
                         </div>
+
+                        {/* Connection status (server may be waking on first load) */}
+                        {connectionStatus !== 'open' && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200/60 dark:border-amber-500/20">
+                                <Loader2 size={13} className="animate-spin shrink-0" />
+                                <span>Connecting to chat… the server may be waking up.</span>
+                            </div>
+                        )}
 
                         {/* Content */}
                         <div className="flex-grow overflow-y-auto bg-white dark:bg-slate-900 custom-scrollbar">

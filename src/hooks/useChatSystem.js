@@ -12,6 +12,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
     const [chatMessages, setChatMessages] = useState([]);
     const [isLoadingChat, setIsLoadingChat] = useState(false);
     const [ws, setWs] = useState(null);
+    const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting' | 'open' | 'closed'
 
     // Search State (kept here as it's related to finding friends)
     const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -162,14 +163,26 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
         }
     }, [activeChatFriend, fetchChatHistory]);
 
-    // Re-implement WS effect to use Ref
+    // WS effect with auto-reconnect (backend can cold-start on Render's free tier,
+    // so the first connect may fail — retry with capped exponential backoff).
     useEffect(() => {
-        if (isLoggedIn && currentUser) {
+        if (!isLoggedIn || !currentUser) return;
+
+        let reconnectTimer = null;
+        let attempts = 0;
+        let stopped = false;
+
+        const connect = () => {
+            if (stopped) return;
             const token = localStorage.getItem('token');
             const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+            setConnectionStatus('connecting');
             const socket = new WebSocket(`${wsUrl}/ws/chat/${currentUser.id}?token=${token}`);
 
-            socket.onopen = () => { };
+            socket.onopen = () => {
+                attempts = 0;
+                setConnectionStatus('open');
+            };
 
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
@@ -207,12 +220,34 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
                 }
             };
 
-            setWs(socket);
-
-            return () => {
-                socket.close();
+            socket.onclose = () => {
+                if (stopped) return;
+                setConnectionStatus('closed');
+                attempts += 1;
+                const delay = Math.min(1000 * 2 ** attempts, 15000);
+                reconnectTimer = setTimeout(connect, delay);
             };
-        }
+
+            socket.onerror = () => {
+                socket.close(); // triggers onclose -> scheduled reconnect
+            };
+
+            setWs(socket);
+        };
+
+        connect();
+
+        return () => {
+            stopped = true;
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+            setWs(prev => {
+                if (prev) {
+                    prev.onclose = null; // avoid reconnect on intentional teardown
+                    prev.close();
+                }
+                return null;
+            });
+        };
     }, [isLoggedIn, currentUser]);
 
 
@@ -224,6 +259,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
         setActiveChatFriend,
         chatMessages,
         isLoadingChat,
+        connectionStatus,
         userSearchQuery,
         setUserSearchQuery,
         userSearchResults,

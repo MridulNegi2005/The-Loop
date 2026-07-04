@@ -568,6 +568,7 @@ export default function App() {
                     onClose={() => chatSystem.setActiveChatFriend(null)}
                     isMobile={isMobile}
                     isLoadingChat={chatSystem.isLoadingChat}
+                    connectionStatus={chatSystem.connectionStatus}
                 />
             )}
         </div>

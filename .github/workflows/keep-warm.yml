@@ -1,0 +1,21 @@
+name: Keep backend warm
+
+# Render's free plan spins the backend down after ~15 min of inactivity, which
+# causes a slow (~30-60s) cold start on the next request. This pings the health
+# endpoint every 10 min to keep it awake. Update BACKEND_URL if the service URL
+# changes. GitHub cron can be delayed under load, so 10 min leaves margin.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        env:
+          BACKEND_URL: https://the-loop-5snj.onrender.com
+        run: |
+          curl -fsS --max-time 90 --retry 3 --retry-delay 20 "$BACKEND_URL/health"
