@@ -1,18 +1,32 @@
 import React from 'react';
 
+// Event times are stored as naive local wall-clock. Some legacy rows still carry
+// a trailing "Z"; strip it so the value is always interpreted in local time
+// rather than shifting by the browser's UTC offset.
+export const parseLocalDate = (dateString) =>
+  new Date(typeof dateString === 'string' ? dateString.replace(/Z$/, '') : dateString);
+
+// Local YYYY-MM-DD key for grouping events by their wall-clock day.
+export const toLocalDateKey = (dateString) => {
+  const d = parseLocalDate(dateString);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+};
+
 export const formatDate = (dateString, options = { month: 'short', day: 'numeric' }) => {
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  return parseLocalDate(dateString).toLocaleDateString(undefined, options);
 };
 export const formatTime = (dateString) => {
   const options = { hour: 'numeric', minute: 'numeric', hour12: true };
-  return new Date(dateString).toLocaleTimeString(undefined, options);
+  return parseLocalDate(dateString).toLocaleTimeString(undefined, options);
 };
 export const formatICSDate = (date) => date.toISOString().replace(/-|:|\.\d{3}/g, '');
 
 export const addToCalendar = (event) => {
   const isAndroid = /android/i.test(navigator.userAgent);
   const formatGoogleDate = (dateString) => {
-    const d = new Date(dateString);
+    const d = parseLocalDate(dateString);
     return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   };
   if (isAndroid) {
@@ -22,7 +36,7 @@ export const addToCalendar = (event) => {
     window.open(url, '_blank');
   } else {
     const escapeText = (text) => text.replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\n');
-    const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', `UID:${event.id}@theloop.com`, `DTSTAMP:${formatICSDate(new Date())}`, `DTSTART:${formatICSDate(new Date(event.start_at))}`, `DTEND:${formatICSDate(new Date(event.end_at))}`, `SUMMARY:${escapeText(event.title)}`, `DESCRIPTION:${escapeText(event.description)}`, `LOCATION:${escapeText(event.venue)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\n');
+    const icsContent = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT', `UID:${event.id}@theloop.com`, `DTSTAMP:${formatICSDate(new Date())}`, `DTSTART:${formatICSDate(parseLocalDate(event.start_at))}`, `DTEND:${formatICSDate(parseLocalDate(event.end_at))}`, `SUMMARY:${escapeText(event.title)}`, `DESCRIPTION:${escapeText(event.description)}`, `LOCATION:${escapeText(event.venue)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\n');
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);

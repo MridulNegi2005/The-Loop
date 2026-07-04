@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import EventCard from './EventCard';
-import { formatDate } from '../lib/utils';
+import { formatDate, toLocalDateKey } from '../lib/utils';
 import { useLocation } from 'react-router-dom';
 
 export default function EventList({ events, setSelectedEvent, currentUser }) {
     const eventsByDate = events.reduce((acc, event) => {
-        const dateKey = new Date(event.start_at).toISOString().slice(0, 10);
+        const dateKey = toLocalDateKey(event.start_at);
         if (!acc[dateKey]) acc[dateKey] = [];
         acc[dateKey].push(event);
         return acc;
