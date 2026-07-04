@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tag } from '../lib/utils';
-import { Check, X, UserPlus, MessageCircle, Search } from 'lucide-react';
+import { toast } from '../lib/toast';
+import { Check, X, UserPlus, MessageCircle, Search, AlertTriangle } from 'lucide-react';
 
 import MobileProfileView from './MobileProfileView';
 
@@ -16,6 +17,8 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
     const [activeTab, setActiveTab] = useState(initialTab);
     const [requestsReceived, setRequestsReceived] = useState([]);
     const [requestsSent, setRequestsSent] = useState([]);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Destructure Chat System
     const {
@@ -154,32 +157,36 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
             const updatedUser = await response.json();
             setUser(updatedUser);
             setIsEditing(false);
+            toast.success('Profile updated.');
         } catch (error) {
             console.error(error);
-            alert('Failed to save profile.');
+            toast.error('Failed to save profile.');
         }
     };
 
-    const handleDeleteProfile = async () => {
-        if (window.confirm("Are you sure you want to delete your profile? This action cannot be undone.")) {
-            const token = localStorage.getItem('token');
-            try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+    const handleDeleteProfile = () => setShowDeleteModal(true);
 
-                if (!response.ok) {
-                    throw new Error('Failed to delete profile');
+    const confirmDeleteProfile = async () => {
+        const token = localStorage.getItem('token');
+        setIsDeleting(true);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
+            });
 
-                handleLogout();
-            } catch (error) {
-                console.error(error);
-                alert('Failed to delete profile.');
+            if (!response.ok) {
+                throw new Error('Failed to delete profile');
             }
+
+            handleLogout();
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to delete profile.');
+            setIsDeleting(false);
+            setShowDeleteModal(false);
         }
     };
 
@@ -195,6 +202,37 @@ export default function ProfilePage({ setIsLoggedIn, setPage, initialTab = 'prof
 
     return (
         <main className="container mx-auto px-4 sm:px-6 py-8 md:py-12">
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-[#0f0f14] border border-gray-200 dark:border-red-500/30 rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 rounded-full bg-red-100 dark:bg-red-500/15 text-red-600 dark:text-red-400">
+                                <AlertTriangle size={22} />
+                            </div>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Delete account?</h2>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                            This permanently deletes your profile and all associated data. This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={isDeleting}
+                                className="flex-1 py-2.5 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-800 dark:text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteProfile}
+                                disabled={isDeleting}
+                                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDeleting ? 'Deleting…' : 'Delete'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Mobile View */}
             <div className="block md:hidden">
                 <MobileProfileView

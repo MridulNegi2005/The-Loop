@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDate, formatTime } from '../lib/utils';
+import { toast } from '../lib/toast';
 
 const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
     const navigate = useNavigate();
@@ -245,7 +246,6 @@ const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
     };
 
     const handleDelete = (eventId) => {
-        console.log("handleDelete called for event:", eventId);
         setDeleteConfirmation({ show: true, eventId });
     };
 
@@ -263,11 +263,12 @@ const AdminPortal = ({ currentUser, mapScriptLoaded }) => {
             if (response.ok) {
                 setMyEvents(prev => prev.filter(e => e.id !== eventId));
                 setDeleteConfirmation({ show: false, eventId: null });
+                toast.success("Event deleted.");
             } else {
-                alert("Failed to delete event");
+                toast.error("Failed to delete event.");
             }
         } catch (e) {
-            alert("Connection error");
+            toast.error("Connection error while deleting event.");
         }
     };
 

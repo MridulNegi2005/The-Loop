@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Clock, Users, Plus, Mail } from 'lucide-react';
+import { toast } from '../lib/toast';
+
+// Safely extract an error message from a failed response (FastAPI uses `detail`).
+const parseError = async (response, fallback) => {
+    try {
+        const data = await response.json();
+        return data.detail || data.message || fallback;
+    } catch {
+        return fallback;
+    }
+};
 
 const CarpoolModal = ({ eventId, onClose, currentUser }) => {
     const [groups, setGroups] = useState([]);
@@ -25,8 +36,12 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
         }
     };
 
+    const [submitting, setSubmitting] = useState(false);
+    const [joiningId, setJoiningId] = useState(null);
+
     const handleCreateGroup = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/events/${eventId}/carpool`, {
@@ -39,17 +54,23 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
             });
 
             if (response.ok) {
+                toast.success("Carpool group created!");
                 fetchGroups();
                 setView('list');
             } else {
-                alert("Failed to create group. Make sure you have joined the event.");
+                const detail = await parseError(response, "Make sure you have joined the event.");
+                toast.error(`Failed to create group. ${detail}`);
             }
         } catch (error) {
             console.error("Error creating group", error);
+            toast.error("Network error: could not create carpool group.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleJoinGroup = async (groupId) => {
+        setJoiningId(groupId);
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/carpool/${groupId}/join`, {
@@ -60,13 +81,16 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
             });
 
             if (response.ok) {
-                alert("Request sent!");
+                toast.success("Request sent!");
+                fetchGroups();
             } else {
-                const data = await response.json();
-                alert(data.message || "Failed to join group");
+                toast.error(await parseError(response, "Failed to join group."));
             }
         } catch (error) {
             console.error("Error joining group", error);
+            toast.error("Network error: could not send request.");
+        } finally {
+            setJoiningId(null);
         }
     };
 
@@ -137,9 +161,10 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                                             {currentUser && currentUser.username !== group.owner_username && (
                                                 <button
                                                     onClick={() => handleJoinGroup(group.id)}
-                                                    className="w-full py-2 bg-purple-900/20 hover:bg-purple-800/30 border border-purple-500/30 text-purple-100 rounded-lg text-sm font-medium transition-colors"
+                                                    disabled={joiningId === group.id}
+                                                    className="w-full py-2 bg-purple-900/20 hover:bg-purple-800/30 border border-purple-500/30 text-purple-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    Request to Join
+                                                    {joiningId === group.id ? 'Sending…' : 'Request to Join'}
                                                 </button>
                                             )}
                                         </div>
@@ -192,9 +217,10 @@ const CarpoolModal = ({ eventId, onClose, currentUser }) => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_25px_rgba(147,51,234,0.5)]"
+                                    disabled={submitting}
+                                    className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)] hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Create Group
+                                    {submitting ? 'Creating…' : 'Create Group'}
                                 </button>
                             </div>
                         </form>

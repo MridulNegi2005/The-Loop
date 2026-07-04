@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
+import { Toaster } from './lib/toast.jsx';
 import './index.css';
 
 
@@ -44,13 +45,10 @@ function showPwaUpdateToast() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {console.log("--- GOOGLE AUTH DEBUG ---")}
-    {console.log("Client ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID)}
-    {console.log("Origin:", window.location.origin)}
-    {console.log("-------------------------")}
     <BrowserRouter>
       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
         <App />
+        <Toaster />
       </GoogleOAuthProvider>
     </BrowserRouter>
   </React.StrictMode>

@@ -19,6 +19,7 @@ import ResetPassword from './components/ResetPassword';
 import ChatWidget from './components/ChatWidget';
 import { useChatSystem } from './hooks/useChatSystem';
 import { formatDate, formatTime, addToCalendar, Tag } from './lib/utils';
+import { toast } from './lib/toast';
 
 // --- MOCK DATA ---
 const mockEvents = [
@@ -93,17 +94,28 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
         } else {
             try {
                 await navigator.clipboard.writeText(shareUrl);
-                alert('Link copied to clipboard!');
+                toast.success('Link copied to clipboard!');
             } catch (e) {
                 window.prompt('Copy this link:', shareUrl);
             }
         }
     };
-    // Remind Me logic (toggle state)
-    const [reminded, setReminded] = React.useState(false);
+    // Remind Me logic — persist reminded event ids in localStorage
+    const REMINDERS_KEY = 'remindedEvents';
+    const readReminders = () => {
+        try {
+            return JSON.parse(localStorage.getItem(REMINDERS_KEY)) || [];
+        } catch {
+            return [];
+        }
+    };
+    const [reminded, setReminded] = React.useState(() => readReminders().includes(event.id));
     const handleRemindMe = () => {
-        setReminded(r => !r);
-        // Here you could add notification/cookie logic
+        const current = readReminders();
+        const next = reminded ? current.filter(id => id !== event.id) : [...current, event.id];
+        localStorage.setItem(REMINDERS_KEY, JSON.stringify(next));
+        setReminded(!reminded);
+        toast.success(reminded ? 'Reminder removed.' : "Reminder set — we'll keep this event handy.");
     };
 
     // Join/Interested Logic
@@ -114,7 +126,7 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
     const handleJoin = async () => {
         const token = localStorage.getItem('token');
         if (!token) {
-            alert("Please log in to join events.");
+            toast.info("Please log in to join events.");
             navigate('/login');
             return;
         }
@@ -128,15 +140,20 @@ const EventDetailsPage = ({ event, mapScriptLoaded, theme, currentUser, fetchEve
             });
             if (response.ok) {
                 setIsJoined(true);
+                toast.success("You're in! Event added to your list.");
                 // Update global events state to reflect the join status
                 fetchEvents();
             } else {
-                const data = await response.json();
-                alert(data.detail || "Failed to join event.");
+                let message = "Failed to join event.";
+                try {
+                    const data = await response.json();
+                    message = data.detail || message;
+                } catch { /* non-JSON error body */ }
+                toast.error(message);
             }
         } catch (e) {
             console.error("Join failed", e);
-            alert("Could not connect to server.");
+            toast.error("Could not connect to server.");
         } finally {
             setIsJoining(false);
         }
@@ -384,7 +401,6 @@ export default function App() {
             });
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-            console.log("Events fetched:", data.length);
             setEvents(data);
         } catch (e) {
             console.error("Failed to fetch events:", e);

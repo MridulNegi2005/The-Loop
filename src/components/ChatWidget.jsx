@@ -50,6 +50,9 @@ export default function ChatWidget({
         setView('list');
     };
 
+    // activeFriend is a snapshot; read live presence from the friends list.
+    const activeIsOnline = !!friends.find(f => f.id === activeFriend?.id)?.is_online;
+
     const formatTime = (timestamp) => {
         return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
@@ -117,7 +120,9 @@ export default function ChatWidget({
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="font-bold text-sm text-gray-900 dark:text-white">@{activeFriend?.username}</span>
-                                            <span className="text-[10px] text-green-500 font-medium">Active now</span>
+                                            <span className={`text-[10px] font-medium ${activeIsOnline ? 'text-green-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                                                {activeIsOnline ? 'Active now' : 'Offline'}
+                                            </span>
                                         </div>
                                     </div>
                                 )}

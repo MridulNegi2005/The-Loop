@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { toast } from '../lib/toast';
 
 export const useChatSystem = (currentUser, isLoggedIn) => {
     // Friends System State
@@ -48,7 +49,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
         const cleanQuery = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/search?query=${cleanQuery}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/search?query=${encodeURIComponent(cleanQuery)}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -71,16 +72,21 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
-                alert("Friend request sent!");
+                toast.success("Friend request sent!");
                 fetchFriendsData();
                 setUserSearchResults([]);
                 setUserSearchQuery('');
             } else {
-                const data = await response.json();
-                alert(data.message || "Failed to send request");
+                let message = "Failed to send request";
+                try {
+                    const data = await response.json();
+                    message = data.detail || data.message || message;
+                } catch { /* non-JSON error body */ }
+                toast.error(message);
             }
         } catch (e) {
             console.error("Failed to send friend request", e);
+            toast.error("Network error: could not send friend request.");
         }
     };
 
@@ -163,9 +169,7 @@ export const useChatSystem = (currentUser, isLoggedIn) => {
             const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
             const socket = new WebSocket(`${wsUrl}/ws/chat/${currentUser.id}?token=${token}`);
 
-            socket.onopen = () => {
-                console.log("Connected to Chat WS");
-            };
+            socket.onopen = () => { };
 
             socket.onmessage = (event) => {
                 const msg = JSON.parse(event.data);
