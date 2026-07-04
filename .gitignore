@@ -24,3 +24,10 @@ Report.tex
 *.sqlite3
 reset_db.py
 delete.py
+
+# AI assistant / cross-agent sync (local only)
+.ai-sync/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.claude/
